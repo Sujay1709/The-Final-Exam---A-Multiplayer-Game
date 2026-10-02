@@ -24,6 +24,7 @@ import { Game } from "@/components/game";
 import { useGame } from "@/lib/use-game";
 import { Toaster } from "@/components/ui/sonner";
 import { useGameTools } from "@/lib/webmcp";
+import { Professor } from "@/components/professor";
 import { Prologue } from "@/components/prologue";
 export default function Home() {
   const [mode, setMode] = useState("create"),
@@ -263,15 +264,11 @@ export default function Home() {
             </div>
           </section>
           <aside className="professor-panel">
-            <img
-              className="professor-image"
-              src="/professor.png"
-              alt="Professor Voss in his shadowy laboratory, glasses glowing with green light"
-            />
+            <Professor />
             <div className="case-number">
               CASE FILE 001<span>CLASSIFIED</span>
             </div>
-            <div className="portrait-space" />
+
             <div className="portrait-copy">
               <span className="eyebrow">MEET YOUR EXAMINER</span>
               <h2>

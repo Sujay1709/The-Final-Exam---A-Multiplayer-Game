@@ -202,3 +202,11 @@ For each future update, bring the selected branch up to date with `main`, make o
 **Technical explanation:** I separated the rules engine from the API and interface, kept deadlines and answer validation on the server, and used versioned database updates to prevent simultaneous submissions from awarding points twice. I tested timing boundaries with a controlled clock and multiplayer behavior against the real API.
 
 **Recruiter explanation:** Friends join on their phones and solve math together to escape a professor's laboratory. I built the gameplay and shared backend that keep everyone's progress consistent.
+
+### Orange interface and original 3D Voss
+
+The entry screen lazy-loads an original toon-shaded Three.js professor. Mouse movement turns his head and body; tap or drag horizontally on touch devices, or use the labelled rotate/reset buttons with a keyboard. Vertical touch scrolling remains available. The scene pauses offscreen and when the browser is hidden, respects reduced motion, resizes to its container, and releases GPU resources on unmount. Devices without WebGL use the existing HD portrait.
+
+Primary actions and focus use orange `#FF9B42`; green marks success and red marks danger. Controls target at least 44 CSS pixels for comfortable touch use. The HD manga prologue is preserved.
+
+Local project location: `/Users/sujaygopal/Desktop/MyProjects/The-Final-Exam---A-Multiplayer-Game`.

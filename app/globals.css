@@ -21,17 +21,18 @@
 .dark {
   --background: #111310;
   --foreground: #f1f2e9;
-  --primary: #d0f369;
-  --primary-foreground: #161c0c;
+  --primary: #FF9B42;
+  --primary-foreground: #17130f;
   --muted: #232720;
   --muted-foreground: #a3aa9c;
   --border: #363b31;
-  --ring: #d0f369;
+  --ring: #FF9B42;
   --input: #3a4133;
   --popover: #1d2119;
   --radius: 0.4rem;
-  --lime: #d0f369;
-  --orange: #f4ad79;
+  --lime: #FF9B42;
+  --orange: #FF9B42;
+  --success: #b4e58b;
   --red: #ff9292;
 }
 * {
@@ -2037,3 +2038,32 @@ h1 span {
     transform: rotate(-20deg);
   }
 }
+
+/* Orange signals an action; green is reserved for a successful lock or escape. */
+button, [role="radio"], [role="tab"], select { min-height:44px; min-width:44px; }
+button:active:not(:disabled) { transform:translateY(1px); filter:brightness(.92); }
+button, select { transition:background-color .16s, border-color .16s, color .16s; }
+select { background:#181c15; color:var(--foreground); border:1px solid var(--border); border-radius:5px; padding:8px 12px; font:inherit; max-width:100%; }
+select:focus-visible, [role="radio"]:focus-visible, [role="tab"]:focus-visible { outline:2px solid var(--primary); outline-offset:4px; }
+.brand-mark { border-color:#876041; background:#2b2118; }
+.brand-sub, .edition, .form-note { color:#b5ada5; }
+.difficulty-choice.selected { border-color:var(--primary); background:#30251b; }
+.lock-card.solved, .solved-answer, .event-log p.event-success, .route-stop.done, .result-icon { color:var(--success); }
+.lock-card.active { border-color:var(--primary); }
+.icon-button { width:44px; flex-shrink:0; }
+.micro, .field-label, .eyebrow { font-size:12px; }
+.professor-panel { overflow:hidden; display:flex; flex-direction:column; background:radial-gradient(ellipse at 50% 35%,#3d3028,#151817 65%); }
+.professor-panel::after { pointer-events:none; }
+.voss-stage { position:relative; height:430px; min-height:360px; z-index:1; }
+.voss-canvas { position:absolute; inset:0 0 48px; touch-action:pan-y; }
+.voss-canvas canvas { display:block; width:100%; height:100%; }
+.voss-fallback { width:100%; height:100%; position:absolute; inset:0; object-fit:cover; }
+.hidden-scene { visibility:hidden; }
+.voss-controls { position:absolute; bottom:0; left:12px; right:12px; display:flex; align-items:center; justify-content:center; gap:8px; }
+.voss-controls button { background:#24231f; color:var(--foreground); border:1px solid #62503d; border-radius:6px; padding:8px; display:grid; place-items:center; }
+.voss-controls span { font-size:12px; color:#d5c7b9; }
+.portrait-copy { position:relative; z-index:1; padding-top:24px; }
+.case-number { pointer-events:none; }
+.error-message { border-left:3px solid var(--red); padding:12px; background:#30201f; }
+@media(max-width:768px) { .voss-stage { height:380px; min-height:320px; } .professor-panel { min-height:0; } .session-strip { flex-wrap:wrap; } .voss-controls { gap:6px; } .portrait-copy { padding-top:20px; } }
+@media(prefers-reduced-motion:reduce) { *, *::before, *::after { scroll-behavior:auto!important; animation-duration:.01ms!important; transition-duration:.01ms!important; } }
