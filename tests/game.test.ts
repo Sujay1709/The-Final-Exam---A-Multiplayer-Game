@@ -17,6 +17,7 @@ function fixture(difficulty: "junior" | "senior" = "junior") {
   g.players.push({
     id: "guest",
     name: "Guest",
+    kind:"human",
     avatar:defaultAvatar(),
     token: "guest-token",
     ready: true,
@@ -57,6 +58,7 @@ test("cannot start alone or with an unready player; host alone controls start", 
   g.players.push({
     id: "guest",
     name: "Guest",
+    kind:"human",
     avatar:defaultAvatar(),
     token: "guest-token",
     ready: false,
@@ -223,7 +225,7 @@ test("host role transfers when disconnected, and unauthorized sessions cannot mu
 
 test("profile updates are owned by the session, validated, unique, and lobby-only",()=>{
  const g=createGame("ABCDEF","Host","junior","token","host",T);
- g.players.push({id:"guest",name:"Guest",avatar:defaultAvatar(),token:"guest-token",ready:false,lastSeen:T,working:null,lastAnswer:0});
+ g.players.push({id:"guest",name:"Guest",kind:"human",avatar:defaultAvatar(),token:"guest-token",ready:false,lastSeen:T,working:null,lastAnswer:0});
  const before=JSON.stringify(g.players[1]);
  mutateGame(g,{op:"profile",token:"token",name:"QuietOwl",avatar:{...defaultAvatar(7),accessory:"glasses"}},T);
  assert.equal(g.players[0].name,"QuietOwl"); assert.equal(JSON.stringify(g.players[1]),before);

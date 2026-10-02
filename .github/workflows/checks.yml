@@ -32,3 +32,17 @@ jobs:
         run: npm run typecheck
       - name: Build the game
         run: npm run build
+      - name: Start local multiplayer preview
+        run: npm run dev > /tmp/final-exam-server.log 2>&1 &
+      - name: Wait for preview
+        run: node scripts/wait-for-game.mjs
+      - name: Initialize disposable local database
+        run: node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_spotty_toad_men.sql
+      - name: Test HTTP multiplayer and profile contracts
+        run: |
+          node tests/integration.mjs
+          node tests/profiles-http.mjs
+          node tests/race-http.mjs
+      - name: Show server diagnostics on failure
+        if: failure()
+        run: cat /tmp/final-exam-server.log
