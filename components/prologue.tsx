@@ -74,7 +74,9 @@ const SCENES = [
 export function Prologue({
   open,
   onClose,
+  motionPreference=false,
 }: {
+  motionPreference?:boolean;
   open: boolean;
   onClose: () => void;
 }) {
@@ -86,7 +88,7 @@ export function Prologue({
 
   useEffect(() => {
     const preference = matchMedia("(prefers-reduced-motion: reduce)");
-    const update = () => setReducedMotion(preference.matches);
+    const update = () => setReducedMotion(preference.matches || motionPreference);
     const visibility = () => setVisible(!document.hidden);
     update();
     visibility();
@@ -96,18 +98,18 @@ export function Prologue({
       preference.removeEventListener("change", update);
       document.removeEventListener("visibilitychange", visibility);
     };
-  }, []);
+  }, [motionPreference]);
 
   useEffect(() => {
     if (!open) return;
     setScene(0);
-    setPlaying(!matchMedia("(prefers-reduced-motion: reduce)").matches);
+    setPlaying(!motionPreference && !matchMedia("(prefers-reduced-motion: reduce)").matches);
     // Preload the next panels so a scene change never waits on an image download.
     SCENES.forEach((s) => {
       const image = new Image();
       image.src = s.image;
     });
-  }, [open]);
+  }, [open,motionPreference]);
 
   useEffect(() => {
     if (

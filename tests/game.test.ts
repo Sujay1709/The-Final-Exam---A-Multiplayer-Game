@@ -1,3 +1,4 @@
+import { defaultAvatar } from "../lib/profiles.ts";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -16,6 +17,7 @@ function fixture(difficulty: "junior" | "senior" = "junior") {
   g.players.push({
     id: "guest",
     name: "Guest",
+    avatar:defaultAvatar(),
     token: "guest-token",
     ready: true,
     lastSeen: T,
@@ -55,6 +57,7 @@ test("cannot start alone or with an unready player; host alone controls start", 
   g.players.push({
     id: "guest",
     name: "Guest",
+    avatar:defaultAvatar(),
     token: "guest-token",
     ready: false,
     lastSeen: T,
@@ -216,4 +219,15 @@ test("host role transfers when disconnected, and unauthorized sessions cannot mu
     () => mutateGame(g, { op: "ready", token: "bad" }, T + 31000),
     /invalid/,
   );
+});
+
+test("profile updates are owned by the session, validated, unique, and lobby-only",()=>{
+ const g=createGame("ABCDEF","Host","junior","token","host",T);
+ g.players.push({id:"guest",name:"Guest",avatar:defaultAvatar(),token:"guest-token",ready:false,lastSeen:T,working:null,lastAnswer:0});
+ const before=JSON.stringify(g.players[1]);
+ mutateGame(g,{op:"profile",token:"token",name:"QuietOwl",avatar:{...defaultAvatar(7),accessory:"glasses"}},T);
+ assert.equal(g.players[0].name,"QuietOwl"); assert.equal(JSON.stringify(g.players[1]),before);
+ assert.throws(()=>mutateGame(g,{op:"profile",token:"token",name:"guest",avatar:defaultAvatar()},T),/already/);
+ assert.throws(()=>mutateGame(g,{op:"profile",token:"token",name:"Host",avatar:{...defaultAvatar(),skin:"url(evil)"}},T),/colors/);
+ g.phase="main";assert.throws(()=>mutateGame(g,{op:"profile",token:"token",name:"Changed"},T),/lobby/);
 });

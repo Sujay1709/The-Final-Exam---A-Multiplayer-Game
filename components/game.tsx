@@ -22,6 +22,8 @@ import {
   TriangleAlert,
   CheckCheck,
 } from "lucide-react";
+import { Avatar } from "./avatar";
+import type { Preferences } from "@/lib/use-preferences";
 import { Progress } from "@/components/ui/progress";
 import {
   AlertDialog,
@@ -41,6 +43,8 @@ import {
   type Session,
 } from "@/lib/game-types";
 type Props = {
+  preferences:Preferences;
+  updatePreferences:(patch:Partial<Preferences>)=>void;
   game: Snapshot;
   session: Session;
   busy: string;
@@ -57,6 +61,7 @@ const formatTime = (n: number) =>
     .toString()
     .padStart(2, "0")}:${(n % 60).toString().padStart(2, "0")}`;
 export function Game({
+  preferences,updatePreferences,
   game: g,
   session,
   busy,
@@ -70,7 +75,8 @@ export function Game({
   const [selected, setSelected] = useState(""),
     [drafts, setDrafts] = useState<Record<string, string>>({}),
     [chat, setChat] = useState("");
-  const [sound, setSound] = useState(false);
+  const sound=preferences.sound;
+  const setSound=(sound:boolean)=>updatePreferences({sound});
   const audio = useRef<AudioContext | null>(null);
   const log = useRef<HTMLDivElement>(null),
     seen = useRef<Set<string>>(new Set());
@@ -116,6 +122,12 @@ export function Game({
     g.events.forEach((e) => seen.current.add(e.id));
     if (log.current) log.current.scrollTop = log.current.scrollHeight;
   }, [g.events, sound]);
+  useEffect(()=>{
+    const unlock=()=>{if(!sound)return;try{audio.current??=new AudioContext();void audio.current.resume();}catch{}};
+    document.addEventListener("pointerdown",unlock);document.addEventListener("keydown",unlock);
+    return ()=>{document.removeEventListener("pointerdown",unlock);document.removeEventListener("keydown",unlock);};
+  },[sound]);
+  useEffect(()=>()=>{void audio.current?.close();},[]);
   async function copy(text: string) {
     try {
       await navigator.clipboard.writeText(text);
@@ -288,6 +300,7 @@ export function Game({
                   ? "At least two players are needed. Share the code with a friend."
                   : "Everyone must be connected and ready. The host plays too."}
               </p>
+              <p className="help-text">Change your alias and character in Player settings before the experiment starts.</p>
               <div className="briefing">
                 <ShieldAlert size={21} />
                 <div>
@@ -674,9 +687,7 @@ export function Game({
             <div className="player-list">
               {g.players.map((p, i) => (
                 <div className="player-row" key={p.id}>
-                  <span className={`avatar avatar-${i % 4}`}>
-                    {p.name.slice(0, 1).toUpperCase()}
-                  </span>
+                  <Avatar profile={p.avatar} label={p.name} className="roster-avatar"/>
                   <div>
                     <strong>
                       {p.name}

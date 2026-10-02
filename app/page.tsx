@@ -24,6 +24,9 @@ import { Game } from "@/components/game";
 import { useGame } from "@/lib/use-game";
 import { Toaster } from "@/components/ui/sonner";
 import { useGameTools } from "@/lib/webmcp";
+import { usePreferences } from "@/lib/use-preferences";
+import { ProfileEditor, AliasButton } from "@/components/profile-editor";
+import { Settings2 } from "lucide-react";
 import { Professor } from "@/components/professor";
 import { Prologue } from "@/components/prologue";
 export default function Home() {
@@ -32,9 +35,12 @@ export default function Home() {
     [rules, setRules] = useState(false);
   const [storyOpen, setStoryOpen] = useState(false);
   const api = useGame();
+  const {preferences,update} = usePreferences();
+  const [settings,setSettings]=useState(false);
+  const name=preferences.alias;
+  const setName=(alias:string)=>update({alias});
   useGameTools(api.game);
-  const [name, setName] = useState(""),
-    [code, setCode] = useState("");
+  const [code, setCode] = useState("");
   useEffect(() => {
     try {
       if (
@@ -71,6 +77,7 @@ export default function Home() {
           </span>
         </a>
         <div className="top-actions">
+          <button className="icon-button" aria-label="Player settings" onClick={()=>setSettings(true)}><Settings2 size={18}/></button>
           <span className="edition">CO-OP ESCAPE ROOM</span>
           {(!api.game || !["main", "detention"].includes(api.game.phase)) && (
             <button
@@ -88,7 +95,7 @@ export default function Home() {
         </div>
       </header>
       {api.game && api.session ? (
-        <Game {...api} game={api.game} session={api.session} />
+        <Game {...api} game={api.game} session={api.session} preferences={preferences} updatePreferences={update} />
       ) : (
         <main className="entry-grid">
           <section className="entry-content">
@@ -120,6 +127,7 @@ export default function Home() {
               </span>
             </div>
             <div className="entry-form">
+              <ProfileEditor avatar={preferences.avatar} onChange={avatar=>update({avatar})}/>
               <Tabs value={mode} onValueChange={setMode}>
                 <TabsList className="entry-tabs">
                   <TabsTrigger value="create">
@@ -135,7 +143,7 @@ export default function Home() {
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
-                      void api.action("create", { name, difficulty });
+                      void api.action("create", { name, difficulty, avatar:preferences.avatar });
                     }}
                   >
                     {" "}
@@ -150,6 +158,7 @@ export default function Home() {
                       maxLength={20}
                       required
                     />
+                    <AliasButton onChange={setName}/>
                     <div className="field-label difficulty-label">
                       CHOOSE YOUR CHALLENGE
                     </div>
@@ -202,6 +211,7 @@ export default function Home() {
                       e.preventDefault();
                       void api.action("join", {
                         name,
+                        avatar:preferences.avatar,
                         code: code.toUpperCase(),
                       });
                     }}
@@ -218,6 +228,7 @@ export default function Home() {
                       maxLength={20}
                       required
                     />
+                    <AliasButton onChange={setName}/>
                     <label className="field-label" htmlFor="room-code">
                       ROOM CODE
                     </label>
@@ -264,7 +275,7 @@ export default function Home() {
             </div>
           </section>
           <aside className="professor-panel">
-            <Professor />
+            <Professor reducedMotion={preferences.reducedMotion} />
             <div className="case-number">
               CASE FILE 001<span>CLASSIFIED</span>
             </div>
@@ -296,7 +307,13 @@ export default function Home() {
         <span>THINK TOGETHER. ESCAPE TOGETHER.</span>
         <span>No downloads. Just brains.</span>
       </footer>
-      <Prologue open={storyOpen} onClose={closeStory} />
+      <Dialog open={settings} onOpenChange={setSettings}><DialogContent className="rules-modal profile-modal"><DialogTitle>Your player settings</DialogTitle><DialogDescription>Saved on this browser. Character changes apply only in the lobby.</DialogDescription>
+      <label className="preference-toggle"><input type="checkbox" checked={preferences.sound} onChange={e=>update({sound:e.target.checked})}/>Game sounds</label>
+      <label className="preference-toggle"><input type="checkbox" checked={preferences.reducedMotion} onChange={e=>update({reducedMotion:e.target.checked})}/>Reduce motion</label>
+      {(!api.game||api.game.phase==="lobby")&&<><label className="settings-field">Anonymous alias<input value={name} maxLength={20} onChange={e=>setName(e.target.value)}/></label><AliasButton onChange={setName}/><ProfileEditor avatar={preferences.avatar} onChange={avatar=>update({avatar})}/>{api.game&&<button className="primary-button" disabled={!!api.busy||!name.trim()} onClick={async()=>{if(await api.action("profile",{name,avatar:preferences.avatar}))setSettings(false);}}>Save character to room</button>}</>}
+      {api.error&&<p className="error-message" role="alert">{api.error}</p>}
+      </DialogContent></Dialog>
+      <Prologue open={storyOpen} onClose={closeStory} motionPreference={preferences.reducedMotion} />
       <Dialog open={rules} onOpenChange={setRules}>
         <DialogContent className="rules-modal">
           <DialogTitle>The rules of the experiment</DialogTitle>

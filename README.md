@@ -210,3 +210,9 @@ The entry screen lazy-loads an original toon-shaded Three.js professor. Mouse mo
 Primary actions and focus use orange `#FF9B42`; green marks success and red marks danger. Controls target at least 44 CSS pixels for comfortable touch use. The HD manga prologue is preserved.
 
 Local project location: `/Users/sujaygopal/Desktop/MyProjects/The-Final-Exam---A-Multiplayer-Game`.
+
+### Player profiles
+
+Choose one of eight original SVG manga characters (Nova, Kai, Mira, Echo, Rin, Axel, Zuri, Theo). Skin, hair, outfit and accessories are cosmetic. An anonymous alias is generated automatically; edit it within 20 characters. Aliases must be unique within a room (case insensitive).
+
+Your character, alias, sound and motion preferences are saved on this browser. Preview the character before creating/joining, and use **Player settings** to save character changes in the lobby. Sound and reduced motion remain adjustable during play. Server validation accepts only the catalog choices, and a session can edit only its own public profile. Profiles are not accounts or cross-device identities.
