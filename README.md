@@ -211,6 +211,11 @@ Primary actions and focus use orange `#FF9B42`; green marks success and red mark
 
 Local project location: `/Users/sujaygopal/Desktop/MyProjects/The-Final-Exam---A-Multiplayer-Game`.
 
+### Player profiles
+
+Choose one of eight original SVG manga characters (Nova, Kai, Mira, Echo, Rin, Axel, Zuri, Theo). Skin, hair, outfit and accessories are cosmetic. An anonymous alias is generated automatically; edit it within 20 characters. Aliases must be unique within a room (case insensitive).
+
+Your character, alias, sound and motion preferences are saved on this browser. Preview the character before creating/joining, and use **Player settings** to save character changes in the lobby. Sound and reduced motion remain adjustable during play. Server validation accepts only the catalog choices, and a session can edit only its own public profile. Profiles are not accounts or cross-device identities.
 ### Mandatory opening cinematic
 
 Each page load opens the three manga chapters before revealing the homepage: The Missing Credit → The Grudge → The Experiment. Press **Start story** once, then each chapter plays for 12 visible, unpaused seconds. There is no skip or fast-forward control. Escape and outside clicks do not dismiss playback. Pause/resume and sound controls remain available; hidden tabs pause the sequence. Reduced motion removes camera movement while preserving automatic progression.

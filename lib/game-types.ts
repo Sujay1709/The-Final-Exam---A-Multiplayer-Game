@@ -1,8 +1,10 @@
+import type { AvatarProfile } from "./profiles.ts";
 export type Difficulty = "junior" | "senior";
 export type Phase = "lobby" | "main" | "detention" | "cleared" | "won" | "lost";
 export interface Player {
   id: string;
   name: string;
+  avatar: AvatarProfile;
   ready: boolean;
   lastSeen: number;
   working: string | null;

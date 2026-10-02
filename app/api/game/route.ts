@@ -1,3 +1,4 @@
+import { validateAvatar } from "@/lib/profiles";
 import { env } from "cloudflare:workers";
 import {
   createGame,
@@ -35,6 +36,7 @@ export async function POST(request: Request) {
     }
     if (!a || typeof a !== "object" || typeof a.op !== "string")
       throw new GameError("Choose a game action.");
+    let avatar; try { avatar=validateAvatar(a.avatar); } catch(e) { throw new GameError((e as Error).message); }
     const database = db();
     if (a.op === "create") {
       const name = nameOf(a.name);
@@ -50,7 +52,7 @@ export async function POST(request: Request) {
           (b) => alphabet[b % alphabet.length],
         ).join("");
         const now = Date.now();
-        const game = createGame(code, name, a.difficulty, token, playerId, now);
+        const game = createGame(code, name, a.difficulty, token, playerId, now, avatar);
         const saved = await database
           .prepare(
             "INSERT OR IGNORE INTO rooms (code,state,version,created_at) VALUES (?,?,0,?)",
@@ -122,6 +124,7 @@ export async function POST(request: Request) {
             id: joinId,
             token: joinToken,
             name,
+            avatar,
             ready: false,
             lastSeen: now,
             working: null,

@@ -1,3 +1,4 @@
+import { defaultAvatar, validateAvatar, type AvatarProfile } from "./profiles.ts";
 import { PUZZLES, DETENTION, type Puzzle } from "./puzzles.ts";
 import {
   ROOM_INFO,
@@ -34,6 +35,7 @@ export interface GameState {
 export interface Action {
   op: string;
   name?: string;
+  avatar?: unknown;
   difficulty?: string;
   token?: string;
   id?: string;
@@ -71,6 +73,7 @@ export function createGame(
   token: string,
   id: string,
   now: number,
+  avatar: AvatarProfile = defaultAvatar(),
 ): GameState {
   return {
     code,
@@ -82,6 +85,7 @@ export function createGame(
       {
         id,
         name,
+        avatar,
         token,
         ready: false,
         lastSeen: now,
@@ -161,6 +165,7 @@ export function parseAnswer(input: unknown): number | null {
   return Number.isFinite(n) ? n : null;
 }
 export function mutateGame(g: GameState, a: Action, now: number): GameState {
+  g.players.forEach(p => p.avatar ??= defaultAvatar());
   const player = g.players.find((p) => p.token === a.token);
   if (!player)
     throw new GameError(
@@ -176,7 +181,14 @@ export function mutateGame(g: GameState, a: Action, now: number): GameState {
   advanceClock(g, now);
   if (a.op === "state") return g;
   if (a.id && g.receipts.includes(a.id)) return g;
-  if (a.op === "ready") {
+  if (a.op === "profile") {
+    if(g.phase!=="lobby") throw new GameError("Character changes are available in the lobby.");
+    const name=typeof a.name==="string"?a.name.trim().replace(/\s+/g," "):"";
+    if(!name||name.length>20) throw new GameError("Choose a name with 1–20 characters.");
+    if(g.players.some(p=>p.id!==player.id&&p.name.toLowerCase()===name.toLowerCase())) throw new GameError("That alias is already in this room. Choose another.",409);
+    let avatar:AvatarProfile;try{avatar=validateAvatar(a.avatar);}catch(e){throw new GameError((e as Error).message);}
+    player.name=name;player.avatar=avatar;
+  } else if (a.op === "ready") {
     if (g.phase !== "lobby")
       throw new GameError("The experiment has already started.");
     player.ready = !!a.ready;
@@ -356,9 +368,10 @@ export function snapshot(g: GameState, version: number, now: number): Snapshot {
     serverNow: now,
     version,
     run: g.run,
-    players: g.players.map(({ id, name, ready, lastSeen, working }) => ({
+    players: g.players.map(({ id, name, avatar, ready, lastSeen, working }) => ({
       id,
       name,
+      avatar: avatar ?? defaultAvatar(),
       ready,
       lastSeen,
       working,
