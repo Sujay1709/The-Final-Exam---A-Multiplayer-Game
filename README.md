@@ -1,57 +1,55 @@
 # The Final Exam — A Multiplayer Math Escape Room
 
-**In-game title: The Professor’s Last Exam.** A cooperative browser game for **2–8 players**, where each player joins from their own device using a six-letter room code. Professor Elias Voss has turned a college reunion into a timed examination. Your team must solve five rooms to escape.
+**The Professor’s Last Exam** is a browser game for **2–8 human players** joining from their own devices with a six-letter room code. Race to escape first, or cooperate to escape together. Professor Elias Voss has turned a college reunion into five rooms of school-level math, countdowns, and escalating detention.
 
 > An old grudge. Five locked rooms. Your only way out? Do the math.
 
-School-level math, a ticking countdown, and teamwork create the challenge. The team shares one score and one punishment meter; players are not eliminated individually. Choose **Junior (classes 5–8)** or **Senior (classes 9–12)**. Questions become harder as the rooms progress, while detention adds an extra escape challenge when the team misses a deadline.
-
 ## Features
 
-- Room creation, code-based joining, readiness, and host controls for 2–8 players.
-- Shared puzzle progress, countdowns, scoring, hints, and a team chat channel.
-- Five themed rooms, with three locks in each room and two difficulty modes.
-- Three escalating detention levels, followed by a final loss condition.
-- An animated manga prologue with HD artwork, white dialogue bubbles, and replay controls.
-- Mobile layouts, reduced-motion support, optional game sounds, and session reconnection.
+- Race with individual locks, clocks, hints, scores, detention, live standings, and final results.
+- Co-op with human teammates and shared progress; room-code joining and host migration.
+- Optional bots fill Race rooms up to eight total seats, with independent skill settings.
+- Eight original SVG manga avatars, cosmetic customization, anonymous aliases, and persistent browser preferences.
+- Orange actions/focus, touch targets, responsive layouts, and reduced motion.
+- Preserved HD manga Voss with interactive 2.5D movement; optional original full-body Three.js sculpt.
+- Mandatory opening cinematic, readable white speech clouds, original local soundtrack, and pause/resume.
 
 ## Preview
 
-![Verified local game screen](docs/game-preview.jpg)
+![Orange interface and preserved manga Voss](docs/orange-home-preview.jpg)
 
-## Animated origin story
+[Opening cinematic](docs/cinematic-preview.jpg) · [Live race](docs/race-preview.jpg)
 
-### What happened to Professor Voss?
+## Backstory and cinematic
 
-Thirty years ago, Elias Voss spent months working on his college team's mathematics research. At the science fair, his classmates accepted the award while his name was missing from the credits. Hurt and furious, he walked away before they could explain.
+Thirty years ago, Elias Voss spent months on his college team’s mathematics research. At the science fair, his friends received the award while his name was missing. He walked away before they could explain. Their letters stayed unopened; a printing error became a betrayal in his mind.
 
-The team's letters remained unopened. Voss kept the old photograph and research notes in his laboratory, replaying the moment until an omission became a betrayal in his mind. A college reunion gave him the opportunity for revenge: if his friends wanted to leave, they would have to earn their way out.
+Years later, Voss turned his science lab into a revenge experiment. He wired number locks into doors, installed countdowns, and built detention rooms. Then he invited his old teammates to a reunion. You must solve the locks and discover the truth in their unopened letter.
 
-He wired his science laboratory's doors to numerical locks, installed countdowns, and built a detention room for missed deadlines. The reunion invitations were sent. His old teammates arrived. The final exam began.
+Every page load begins with **The Missing Credit → The Grudge → The Experiment** before revealing the homepage. Press **Start story** once; each chapter receives twelve visible, unpaused seconds. There is no skip, chapter jump, premature enter button, or Escape dismissal. Hidden tabs pause playback. Pause/resume and sound controls remain available. Reduced motion removes camera movement while retaining automatic progression.
 
-You play as the invited team. Cooperation, quick thinking, and familiar mathematics are your escape tools.
+This is a cinematic made from animated HD artwork, not a rendered video file. Its original laboratory soundtrack is synthesized locally in the browser. Audio needs a user gesture and can be muted. Captions and dialogue remain readable text. [Artwork notes](docs/story-art.md) document the original panels.
 
-### How the story is presented
-
-First-time visitors see three manga scenes: the missing research credit, Voss's growing grudge, and the laboratory becoming an escape room. HD illustrations use gentle camera movement and arriving white speech bubbles. Dialogue is HTML text, so it stays crisp and readable as the screen changes size. Use **Pause**, chapter tabs, **Back**, **Next scene**, or **Skip story**. Replay with **The backstory** outside a running puzzle countdown. Reduced-motion preferences disable autoplay and animation.
-
-The prologue belongs to the individual device; it never changes the shared game clock. Returning players reconnect directly. [Artwork and generation notes](docs/story-art.md) document the three panels.
-
-![Verified local manga prologue](docs/prologue-preview.jpg)
+The original manga professor is the default interactive view. Mouse motion, touch tap/horizontal drag, and labelled movement/reset buttons provide bounded **2.5D parallax**. This does not reconstruct the artwork as a 3D model. The optional **3D sculpt** is an original toon-shaded, full-body Three.js Voss with articulated head/torso/arms, silver hair, glasses, coat, notebook, and lab props. It lazy-loads, pauses when hidden/offscreen, resizes to its container, respects reduced motion, and disposes graphics resources. WebGL failure retains the manga portrait. Touch panels preserve vertical page scrolling.
 
 ## How to play
 
-1. Create a room, enter your name, and choose **Junior (classes 5–8)** or **Senior (classes 9–12)**.
-2. Share the room code or invitation link. Each teammate opens the same website on their own device and joins.
-3. Everyone clicks **I’m ready**. The host starts the experiment and participates too.
-4. Choose a lock, share your reasoning in the team channel, and submit a numerical answer. Fractions such as `3/8` and equivalent decimals are accepted.
-5. Solve all three locks to clear a room. The host opens the next room when the team has read the explanations.
+1. Complete the opening story, then preview your character and edit your anonymous alias (1–20 characters).
+2. Create a room with mode, mathematics, time pressure, and optional bot settings; or join by code.
+3. Share the code or invitation link. Each human joins from their own browser/device. Humans joining the lobby replace bot seats.
+4. At least **two connected, ready humans** are required. The human host starts; bots never host.
+5. Choose a lock and submit its numerical answer. Fractions and equivalent decimals are accepted; omit units and equations. Invalid input has no penalty.
+6. Solve all three main locks to clear a room. Race advances automatically after a three-second summary. Co-op lets the host advance after the team reads the explanations.
 
-You can work on different locks at the same time. Use the team channel to compare reasoning, ask for help, and coordinate submissions. Everyone sees the same solved locks and hints. A correct answer from any teammate helps the entire team.
+**Race:** same questions for all racers, but only your submissions change your locks, clock, hints, score, and punishment. The first successful escape wins. Others continue until they escape, lose, or explicitly leave. Final results appear when everyone has finished. Your solved explanations remain available in **Your solved questions**; opponents’ hints and explanations are private.
 
-Enter only the numerical result, without units. Fractions and equivalent decimals are accepted; there is no need to type the full equation. Invalid input shows a validation message without a time penalty. Once a lock opens, its worked explanation becomes available.
+**Co-op:** humans share locks, time, hints, score, and punishment. A teammate’s correct answer helps everyone. There are no bot teammates in Co-op. Use the room channel to coordinate.
 
-### Your escape route
+The host can change lobby settings; a change resets human readiness so players acknowledge the new rules. Character/alias edits are lobby-only. Sound and motion settings are available throughout play. Customization gives no gameplay advantage. Aliases must be unique in the room, case insensitive; the server validates catalog colors/accessories and authorizes only the caller’s own profile.
+
+## Mathematics
+
+**Junior:** classes 5–8. **Senior:** classes 9–12. These control the questions, independently of time pressure and bot skill. Questions grow harder across the rooms, within the selected range. The existing authored bank is preserved.
 
 | Room                    | Theme                          | Junior examples                       | Senior examples                                 |
 | ----------------------- | ------------------------------ | ------------------------------------- | ----------------------------------------------- |
@@ -61,163 +59,134 @@ Enter only the numerical result, without units. Fractions and equivalent decimal
 | 4. The Geometry Trap    | Shapes and measurements        | Area, perimeter, triangle angles      | Pythagoras, circle area, a trigonometric ratio  |
 | 5. The Final Exam       | Mixed final challenge          | Equations, probability, averages      | Simultaneous equations, probability, quadratics |
 
-These are approachable questions within the selected school-level range, not complete coverage of every class syllabus. Geometry formulas needed for a question are included in its prompt.
 
-## Rules and scoring
+These are approachable questions within the selected range, not complete coverage of every syllabus. Required geometry formulas appear in prompts. Detention uses familiar, simpler math for both mathematics settings.
 
-| Event                                         | Result                                                                            |
-| --------------------------------------------- | --------------------------------------------------------------------------------- |
-| Start a main room                             | Four-minute countdown                                                             |
-| Correct answer                                | +20 seconds; +100 points for a main-room puzzle                                   |
-| Incorrect numerical answer                    | −10 seconds                                                                       |
-| Reveal a puzzle’s hint                        | −15 seconds, once per puzzle for the whole team                                   |
-| Clear a main room                             | One bonus point per whole second remaining                                        |
-| Main-room timeout                             | −100 points, minimum score zero; punishment increases                             |
-| Detention level 1                             | One puzzle; 60 seconds                                                            |
-| Detention level 2                             | Two puzzles; 90 seconds                                                           |
-| Detention level 3                             | Two fragments and a dependent exit-code puzzle; 120 seconds                       |
-| Clear detention                               | Return to the unfinished room with two minutes; solved main puzzles remain solved |
-| Fail detention or miss a fourth main deadline | The escape attempt ends                                                           |
-| Clear all five main rooms                     | The team escapes and receives the ending                                          |
+## Rules, scoring, and punishment
 
-Detention questions use familiar, simpler math in both modes. Correct detention answers add 20 seconds but do not award puzzle points. Wrong submissions and hints use the same penalties. Invalid input produces a validation message and no penalty. Refreshing restores the player session on the same browser; explicitly leaving removes membership. If a host disconnects for 30 seconds, a connected teammate becomes host.
+| Time pressure | Easy | Medium | Hard |
+| --- | ---: | ---: | ---: |
+| Main-room countdown | 300s | 240s | 180s |
+| Wrong-answer penalty | −5s | −10s | −15s |
+| Hint penalty, once per puzzle | −10s | −15s | −20s |
+| Detention level 1 | 90s | 60s | 45s |
+| Detention level 2 | 120s | 90s | 60s |
+| Detention level 3 | 150s | 120s | 90s |
+| Time after clearing detention | 150s | 120s | 90s |
 
-### How punishment works
+- Correct answers add **20 seconds**; main puzzles also award **100 points**.
+- Clear a main room for one bonus point per whole second remaining.
+- A main timeout removes **100 points**, clamped to zero, and raises punishment by one.
+- Level 1 detention has one puzzle; level 2 has two; level 3 has two fragments and a dependent exit-code lock.
+- Clear detention to resume the unfinished main room. Solved main locks stay open; punishment does not reset.
+- Correct detention answers add time but no puzzle points; wrong answers and hints use the normal penalties.
+- Fail detention or miss a fourth main deadline and the attempt ends. Clearing all five main rooms is an escape.
 
-Punishment is shared and accumulates across the whole escape attempt. It increases when the main-room countdown expires, including when penalties push the remaining time to zero. A wrong answer by itself removes time; it does not immediately raise the punishment level.
+Medium preserves the original approved scoring rules. Punishment belongs to each racer in Race and to the team in Co-op. A wrong answer removes time; punishment rises only when a main deadline expires, including penalties that push the clock to zero.
 
-1. **Warning:** solve one detention puzzle in 60 seconds.
-2. **Detention:** solve two detention puzzles in 90 seconds.
-3. **Final probation:** solve two fragments, then use them to unlock a dependent exit-code puzzle in 120 seconds.
-4. **Fourth missed main deadline:** the attempt ends immediately.
+### Bot behavior
 
-Clearing detention sends you back to the unfinished main room with two minutes. Already solved main-room locks stay open. Clearing detention does not reset the punishment meter. Fail a detention deadline and the attempt ends.
+| Bot skill | Delay between attempts | Answer accuracy |
+| --- | --- | ---: |
+| Easy | 25–45 seconds | 55% |
+| Medium | 14–25 seconds | 75% |
+| Hard | 8–16 seconds | 90% |
 
-### When the game ends
+Bots are simulated opponents, not AI/ML models. The server samples seeded attempt delays and success/failure, then uses the same numerical answer validator and penalties as humans. BOT badges identify them. Delay and accuracy control simulated skill, separately from game time pressure. New Race rooms fill vacant seats by default: two humans produce six bots; eight humans produce none. Bot filling can be disabled.
 
-**Win:** clear all three locks in each of the five main rooms. The team receives its final shared score and the story ending.
+Scheduled actions and deadlines are processed in chronological server time. Extra polling cannot accelerate bots or award duplicate points. If nobody sends requests, the server catches up from the original timestamps on the next authenticated request; reconnecting grants no extra time. A disconnected human’s timer continues; an explicit leave ends that racer’s participation. Departed racers remain in final results. All humans leaving stops the bots. A host absent for 30 seconds is replaced by a connected human.
 
-**Lose:** fail a detention deadline or miss a fourth main-room deadline. Review the attempt and puzzle explanations, then start another run.
+**New-room defaults:** Race, Junior, Medium time pressure, Medium bot skill, bot filling enabled. Older stored rooms normalize to Co-op/Medium with default avatars.
 
-<details>
-<summary>Story ending — spoilers</summary>
-
-An unopened letter reveals that Voss's missing credit was a printing error. His friends tried to correct it and contact him, but he never read their messages. The team's escape shows him that cooperation was the answer all along.
-
+<details><summary>Story ending — spoilers</summary>
+The unopened letter reveals a printing error. His friends tried to correct the missing credit, but Voss never read their messages. Escape reveals the misunderstanding.
 </details>
 
 ## Run locally
 
-Requires **Node.js 22.13+** and npm. This standalone game uses React, TypeScript, Vinext, Cloudflare Workers and D1 (SQLite). Its backend is TypeScript rather than Flask so the whole multiplayer experience can run on Sites hosting.
+Project location: `/Users/sujaygopal/Desktop/MyProjects/The-Final-Exam---A-Multiplayer-Game`.
+
+Requires **Node.js 22.13+** and npm. The app uses React, TypeScript, Vinext, Three.js, Cloudflare Workers, and D1/SQLite. The existing JSON room storage holds settings and private race progress; no new SQL table is required.
 
 ```sh
 git clone https://github.com/Sujay1709/The-Final-Exam---A-Multiplayer-Game.git
 cd The-Final-Exam---A-Multiplayer-Game
-npm ci
+# Complete implementation while these feature PRs remain open:
+git switch codex/race-bots
+npm run install:ci
 npm run build
+# Run once for a NEW database only:
 node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_spotty_toad_men.sql
 npm run dev
 ```
 
-Run the migration once for a new local database. It uses local storage only. The development server prints its URL, normally `http://127.0.0.1:5173`. `vite.config.ts` listens on `0.0.0.0` so phones on the same Wi-Fi can open `http://YOUR_COMPUTER_LAN_IP:5173`. Keep the server running and the computer awake. `127.0.0.1` on a phone points at the phone itself. Local sign-in is mocked by the starter; development mode is not a public deployment.
+The moved project retains its existing database; do not rerun its applied migration. The dev server listens on `0.0.0.0:5173`. Local access: `http://localhost:5173`. Phones on the same network use `http://YOUR_COMPUTER_LAN_IP:5173`. Keep the computer awake and the server running. LAN IPs can change. A phone’s localhost points at the phone itself. Development mode uses the starter’s mocked sign-in and is not a public deployment.
 
-Your router may assign a different LAN IP after a restart or network change. Joining and actions also work over plain local HTTP: the client generates request IDs with `crypto.getRandomValues`, which is available there, rather than the HTTPS-only `crypto.randomUUID` method.
-
-The shared database owns room state. Browser storage holds only the current player's session credential; never share it. Rooms expire after 24 hours. New players can join while the lobby is open. Existing players reconnect on their original device.
+Browser storage holds the device’s profile/preferences and current session credential. Do not share the credential. Rooms expire after 24 hours. New humans join only in the lobby; existing sessions reconnect on their original browser. Two tabs in one browser normally share identity—use another device, browser, or private window for another human.
 
 ## Verify
 
 ```sh
 npm test
 npm run typecheck
-# With the local server running:
+npm run build
+# With the local preview running:
 node tests/integration.mjs
+node tests/profiles-http.mjs
+node tests/race-http.mjs
 ```
 
-The rules tests use a controlled clock to exercise all detention levels without waiting several minutes. They cover complete Junior/Senior paths, equivalent numerical inputs, deadlines, scoring, duplicate actions, hidden solutions and host migration.
+Controlled-clock tests cover original Co-op rules, pressure settings, isolated detention, automatic progression, deadline catch-up, first escape/final ordering, host migration, bot scheduling independent of polling, reconnects, legacy state, and all 3200 avatar combinations. HTTP tests cover eight humans, two humans plus six bots, replacement/capacity, concurrent submissions, idempotency, settings/profile permissions, alias validation, and private snapshots. GitHub CI builds and runs rules plus HTTP tests on a disposable local database for the final feature PR.
 
-The HTTP test connects **eight independent player sessions** to the actual local API. It checks capacity, permissions, concurrent submissions, shared hints, chat, replay protection and room progression. It creates a disposable test room and removes its player memberships afterward.
+For manual UI checks: try 375/390px phone widths and desktop; customize then reload; change profile in the lobby; toggle sound/motion during play; use pointer/touch and keyboard movement/reset controls; switch between portrait/sculpt; test a device without WebGL. Complete the cinematic and verify reload replays it. Real physical phone touch and classroom playtesting remain useful beyond browser viewport checks.
 
-For a manual test, use a separate browser or private window for the second player. Two tabs in one browser normally restore the same identity. Verify correct answers add time, wrong answers remove time, and both players see the same lock open. Let a room expire to check detention, then clear it to verify your main-room progress is preserved.
+## Architecture and learning
 
-## How the code works
+- `lib/game.ts`: shared rule functions operate on either one cooperative progress record or a private record per racer; bots use the same validator.
+- `lib/game-settings.ts`: pressure/skill tables and validated room settings.
+- `lib/game-types.ts`: public contracts; `lib/puzzles.ts`: server-only authored question/answer bank.
+- `app/api/game/route.ts`: session authentication, room creation/joining, viewer-specific snapshots, and versioned D1 updates.
+- `lib/use-game.ts`: polling every 1.2 seconds, reconnects, and server-clock synchronization.
+- `lib/profiles.ts`, `components/avatar.tsx`, `components/profile-editor.tsx`: validated cosmetic catalog and original SVG art.
+- `lib/use-preferences.ts`: browser preference persistence; `components/room-settings.tsx`: lobby controls.
+- `components/game.tsx`: personal puzzle board, room channel, standings, and own-question review.
+- `components/prologue.tsx`, `components/professor.tsx`, `components/professor-scene.tsx`: cinematic, preserved manga motion, and optional original 3D figure.
 
-- `lib/puzzles.ts`: authored questions, answer keys, hints and explanations. Imported only by server code and tests.
-- `lib/game.ts`: rules engine that verifies actions and updates game state.
-- `app/api/game/route.ts`: room creation, joining and authenticated player actions.
-- `db/schema.ts` and `drizzle/`: shared storage and database migration.
-- `lib/use-game.ts`: reconnecting client and server-clock synchronization.
-- `components/game.tsx`: lobby, puzzle board, team channel, detention and endings.
-- `components/prologue.tsx` and `public/story/`: animated manga prologue and HD panels.
-- `app/page.tsx` and `app/globals.css`: start screen and responsive design.
+**Server authority:** deadlines and numerical validation live on the server. Browser timer edits cannot change rules. Race snapshots include only the authenticated player’s puzzles/explanations and opponents’ public progress; session tokens, RNG state, scheduled attempts, and private progress are excluded.
 
-**Server authority:** the server checks the deadline before accepting an answer. Editing a browser timer cannot extend the game. Snapshots exclude answer keys and other players’ credentials.
+**Optimistic concurrency:** a room update succeeds only if the stored version still matches the version read. Concurrent requests reload/retry on conflict. This prevents lost updates and duplicate awards. Seeded bot state is persisted through the same update, so retries do not create additional actions.
 
-**Concurrency:** each room has a database version. An update succeeds only if that version has not changed since it was read. If two players submit simultaneously, the losing update reloads and retries. This is called _optimistic concurrency control_. It prevents double points and lost updates.
+**Live synchronization:** this is polling, not WebSockets. Changes generally appear within one polling interval plus network latency. Timers use server timestamps and catch up on requests, including when everyone was disconnected.
 
-**Live synchronization:** clients fetch shared state every 1.2 seconds, with slower retries after connection failures. The visible countdown ticks locally against the server clock. This is polling rather than WebSockets; updates generally appear within one polling interval plus network latency. Timers continue while a device reconnects. Expiry transitions run on the next server request. If everyone goes offline, an unobserved detention room begins when a player returns.
+## Debugging and limitations
 
-**Learning design:** difficulty increases within the selected range. Hints reveal strategies, and solved puzzles reveal working. Necessary geometry formulas appear in the question.
+- Database unavailable: inspect the server log, check the `DB` binding, and initialize a new local database once.
+- Cannot start: at least two connected humans must ready up; only the human host starts. Bots cannot satisfy the human minimum.
+- Phone cannot connect: use the computer’s LAN IP, same network, awake host, and allow port 5173 through the firewall/router.
+- Stale-phase error: review the new room before resubmitting; the prior answer was not accepted into a different room.
+- Silent audio: press Start story or a sound button; browsers require a gesture. Check the mute preference.
+- No 3D: use the preserved portrait; WebGL may be unavailable. Clear hot-reload hook errors by refreshing.
 
-## Debugging tips
+The fixed bank contains 30 main puzzles and six detention steps. Replays repeat questions. Bots simulate skill; they do not learn. Tests validate room-level correctness, not large-scale load. There are no app accounts, global leaderboard, random question generation, or ML inference. Public deployment needs abuse protection and classroom testing. GitHub source upload is separate from publishing; this delivery leaves main and hosted publishing unchanged.
 
-- **Database unavailable:** inspect the server terminal. Confirm the binding is `DB` and the local migration ran. Do not repeatedly rerun an applied migration.
-- **Cannot start:** gather 2–8 players; everyone must be connected and ready. Only the current host starts.
-- **Second tab is the same player:** use a private window or another browser/device.
-- **Phone cannot connect:** use the computer's LAN IP and the same Wi-Fi; keep the server running and Mac awake; check the firewall permits port 5173 and that the router allows devices to communicate.
-- **Room changed while submitting:** your answer belongs to a previous phase. Read the current puzzle and submit again.
-- **Hook error after editing:** refresh the preview. Hot reload can retain an obsolete React hook layout.
+## Feature PRs and future updates
 
-## Scope and limitations
+The current delivery is stacked and remains open for review:
 
-This version has a fixed verified set of 30 main puzzles and six detention steps. Replays repeat the same questions. The eight-player test checks one room, not large-scale load. The game has no WebSockets, app accounts, random question generation, global leaderboard or AI-generated math. Public operation would benefit from deployment-level abuse protection and classroom playtesting. New Sites publications start private; grant teammates access using the Site's sharing controls.
+| Branch | PR target | Responsibility |
+| --- | --- | --- |
+| `codex/ui-orange-3d` | `main` | Orange UI, cinematic, preserved interactive manga, optional 3D |
+| `codex/player-profiles` | `codex/ui-orange-3d` | Original avatars, aliases, persistent settings, profile authorization |
+| `codex/race-bots` | `codex/player-profiles` | Race, pressure/skill settings, deterministic bots, private progress |
 
-The repository contains the working local game and Sites build configuration. A GitHub source upload is separate from publishing a hosted game. The LAN URL is available only on the host computer's network while its server is running.
+The final branch contains the complete preview. Merge the dependencies in order when approved, then retarget dependent PRs as needed. Existing baseline feature branches and Git history are retained. Branches isolate change history; they do not prohibit changes to shared files. Keep future changes focused, test them, and open a PR. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Feature branches and future updates
+## Portfolio explanation
 
-`main` contains the shared baseline. Each branch below starts with the complete working game, so you can run and test a feature change in isolation. A branch is a separate history of the project, not a restriction on which files can be edited.
+**Resume bullet:** Built a 2–8-player math escape game with independent competitive progress, deterministic simulated opponents, cosmetic profiles, server-authoritative deadlines, and versioned SQLite updates; validated concurrency and private snapshots through rules and HTTP tests.
 
-| Branch                    | Responsibility                                     | Main files                                                                             |
-| ------------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `codex/manga-backstory`   | Story scenes, dialogue, artwork, animation         | `components/prologue.tsx`, `public/story/`, `docs/story-art.md`                        |
-| `codex/math-puzzles`      | Questions, difficulty, hints, explanations         | `lib/puzzles.ts`, `tests/game.test.ts`                                                 |
-| `codex/gameplay-scoring`  | Timers, points, detention, win/loss rules          | `lib/game.ts`, `lib/game-types.ts`, `tests/game.test.ts`                               |
-| `codex/multiplayer-rooms` | Room codes, joining, readiness, synchronization    | `app/api/game/route.ts`, `lib/use-game.ts`, `db/`, `drizzle/`, `tests/integration.mjs` |
-| `codex/team-chat-audio`   | Team messaging and optional sound cues             | `components/game.tsx`, chat actions in `lib/game.ts`                                   |
-| `codex/ui-accessibility`  | Lobby, puzzle board, mobile layouts, accessibility | `app/page.tsx`, `components/game.tsx`, `app/globals.css`, `components/ui/`             |
-| `codex/deployment`        | Build tooling, Sites configuration, runtime setup  | `vite.config.ts`, `build/`, `scripts/`, `.openai/hosting.json`                         |
-| `codex/documentation`     | Game information and contributor guidance          | `README.md`, `CONTRIBUTING.md`, `docs/`                                                |
+**Project description:** A narrative browser party game where students race or cooperate to solve progressively harder school math under time pressure.
 
-Some features share files. For example, both scoring and chat use `lib/game.ts`. Git merges edits at the file-content level; shared files still require review and may produce a conflict.
+**Interview explanation:** I reused one rules engine for shared and private progress, separated question level from time pressure/opponent skill, and processed seeded bot actions in logical server time. Versioned database writes and replay receipts prevent duplicate awards; viewer-specific snapshots protect opponents’ explanations.
 
-For each future update, bring the selected branch up to date with `main`, make one focused change, test it, and open a pull request into `main`. New one-purpose branches created from the latest `main` are also a good choice. See [CONTRIBUTING.md](CONTRIBUTING.md) for exact commands, conflict handling, and safe switching.
-
-## Portfolio and interviews
-
-**Resume bullet:** Built a cooperative math escape game for 2–8 players with room-code matchmaking, synchronized countdowns, escalating penalty rooms and shared scoring; validated concurrent updates using eight independent player sessions.
-
-**Project description:** A browser-based educational party game combining progressively harder school math with timed collaboration and a narrative escape room.
-
-**Technical explanation:** I separated the rules engine from the API and interface, kept deadlines and answer validation on the server, and used versioned database updates to prevent simultaneous submissions from awarding points twice. I tested timing boundaries with a controlled clock and multiplayer behavior against the real API.
-
-**Recruiter explanation:** Friends join on their phones and solve math together to escape a professor's laboratory. I built the gameplay and shared backend that keep everyone's progress consistent.
-
-### Orange interface and original 3D Voss
-
-The entry screen lazy-loads an original toon-shaded Three.js professor. Mouse movement turns his head and body; tap or drag horizontally on touch devices, or use the labelled rotate/reset buttons with a keyboard. Vertical touch scrolling remains available. The scene pauses offscreen and when the browser is hidden, respects reduced motion, resizes to its container, and releases GPU resources on unmount. Devices without WebGL use the existing HD portrait.
-
-Primary actions and focus use orange `#FF9B42`; green marks success and red marks danger. Controls target at least 44 CSS pixels for comfortable touch use. The HD manga prologue is preserved.
-
-Local project location: `/Users/sujaygopal/Desktop/MyProjects/The-Final-Exam---A-Multiplayer-Game`.
-
-### Player profiles
-
-Choose one of eight original SVG manga characters (Nova, Kai, Mira, Echo, Rin, Axel, Zuri, Theo). Skin, hair, outfit and accessories are cosmetic. An anonymous alias is generated automatically; edit it within 20 characters. Aliases must be unique within a room (case insensitive).
-
-Your character, alias, sound and motion preferences are saved on this browser. Preview the character before creating/joining, and use **Player settings** to save character changes in the lobby. Sound and reduced motion remain adjustable during play. Server validation accepts only the catalog choices, and a session can edit only its own public profile. Profiles are not accounts or cross-device identities.
-### Mandatory opening cinematic
-
-Each page load opens the three manga chapters before revealing the homepage: The Missing Credit → The Grudge → The Experiment. Press **Start story** once, then each chapter plays for 12 visible, unpaused seconds. There is no skip or fast-forward control. Escape and outside clicks do not dismiss playback. Pause/resume and sound controls remain available; hidden tabs pause the sequence. Reduced motion removes camera movement while preserving automatic progression.
-
-This is an animated artwork cinematic with an original browser-synthesized laboratory soundtrack, not a rendered video file. Browsers require a user gesture for audio. The original HD manga Voss is the default interactive portrait, with bounded mouse/touch parallax and keyboard movement controls. This is **2.5D motion**, not rotation of a 3D reconstruction. The original full-body Three.js sculpt remains available as an optional view.
+**Recruiter explanation:** Friends join by code on their phones, customize characters, and escape a professor’s lab by solving math. Small groups can compete against clearly labelled computer opponents.

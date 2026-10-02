@@ -1,7 +1,10 @@
+import { validateSettings, NEW_ROOM_SETTINGS } from "@/lib/game-settings";
 import { validateAvatar } from "@/lib/profiles";
 import { env } from "cloudflare:workers";
 import {
   createGame,
+  normalizeGame,
+  joinGame,
   mutateGame,
   snapshot,
   GameError,
@@ -36,10 +39,16 @@ export async function POST(request: Request) {
     }
     if (!a || typeof a !== "object" || typeof a.op !== "string")
       throw new GameError("Choose a game action.");
-    let avatar; try { avatar=validateAvatar(a.avatar); } catch(e) { throw new GameError((e as Error).message); }
+    let avatar;
+    try {
+      avatar = validateAvatar(a.avatar);
+    } catch (e) {
+      throw new GameError((e as Error).message);
+    }
     const database = db();
     if (a.op === "create") {
       const name = nameOf(a.name);
+      a.difficulty ??= "junior";
       if (a.difficulty !== "junior" && a.difficulty !== "senior")
         throw new GameError("Choose Junior or Senior.");
       const token = crypto.randomUUID() + crypto.randomUUID(),
@@ -52,7 +61,28 @@ export async function POST(request: Request) {
           (b) => alphabet[b % alphabet.length],
         ).join("");
         const now = Date.now();
-        const game = createGame(code, name, a.difficulty, token, playerId, now, avatar);
+        let settings;
+        try {
+          settings = validateSettings({
+            mode: a.mode ?? NEW_ROOM_SETTINGS.mode,
+            gameDifficulty:
+              a.gameDifficulty ?? NEW_ROOM_SETTINGS.gameDifficulty,
+            botSkill: a.botSkill ?? NEW_ROOM_SETTINGS.botSkill,
+            fillBots: a.fillBots ?? NEW_ROOM_SETTINGS.fillBots,
+          });
+        } catch (e) {
+          throw new GameError((e as Error).message);
+        }
+        const game = createGame(
+          code,
+          name,
+          a.difficulty,
+          token,
+          playerId,
+          now,
+          avatar,
+          settings,
+        );
         const saved = await database
           .prepare(
             "INSERT OR IGNORE INTO rooms (code,state,version,created_at) VALUES (?,?,0,?)",
@@ -66,7 +96,7 @@ export async function POST(request: Request) {
             .run();
           return json({
             session: { code, token, playerId },
-            game: snapshot(game, 0, now),
+            game: snapshot(game, 0, now, playerId),
           });
         }
       }
@@ -98,44 +128,20 @@ export async function POST(request: Request) {
           "Room not found or expired. Check the code with your host.",
           404,
         );
-      const game: GameState = JSON.parse(row.state),
+      const game: GameState = normalizeGame(JSON.parse(row.state)),
         now = Date.now();
       let error: GameError | null = null;
       try {
         if (a.op === "join") {
           const name = nameOf(a.name);
-          if (game.phase !== "lobby")
-            throw new GameError(
-              "This experiment has started. Existing players can reconnect on their original device.",
-              409,
-            );
-          if (game.players.length >= 8)
-            throw new GameError("This room is full (8 players).", 409);
-          if (
-            game.players.some(
-              (p) => p.name.toLowerCase() === name.toLowerCase(),
-            )
-          )
-            throw new GameError(
-              "That name is already in this room. Choose another.",
-              409,
-            );
-          game.players.push({
-            id: joinId,
-            token: joinToken,
-            name,
-            avatar,
-            ready: false,
-            lastSeen: now,
-            working: null,
-            lastAnswer: 0,
-          });
+          joinGame(game, name, avatar, joinToken, joinId, now);
         } else mutateGame(game, a, now);
       } catch (e) {
         if (e instanceof GameError) error = e;
         else throw e;
       }
-      if (error?.status === 401) return json({ error: error.message }, 401);
+      if (error?.status === 401 || (a.op === "join" && error))
+        return json({ error: error.message }, error.status);
       const saved = await database
         .prepare(
           "UPDATE rooms SET state = ?, version = version + 1 WHERE code = ? AND version = ?",
@@ -143,7 +149,15 @@ export async function POST(request: Request) {
         .bind(JSON.stringify(game), a.code, row.version)
         .run();
       if (!saved.meta.changes) continue;
-      const view = snapshot(game, row.version + 1, now);
+      const viewerId =
+        a.op === "join"
+          ? joinId
+          : game.players.find((p) => p.kind === "human" && p.token === a.token)
+              ?.id;
+      const view =
+        a.op === "leave"
+          ? null
+          : snapshot(game, row.version + 1, now, viewerId);
       if (error)
         return json({ error: error.message, game: view }, error.status);
       return json({

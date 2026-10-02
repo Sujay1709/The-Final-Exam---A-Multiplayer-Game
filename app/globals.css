@@ -2114,3 +2114,41 @@ html[data-reduce-motion=true] *, html[data-reduce-motion=true] *::before, html[d
 .cinematic-modal .story-controls { position:relative; flex-shrink:0; }
 .cinematic-modal .story-header, .cinematic-modal .story-chapters { flex-shrink:0; }
 @media(max-width:760px) { .cinematic-modal .manga-image { height:min(28dvh,260px); aspect-ratio:auto; } .cinematic-modal .story-stage { height:auto; } .cinematic-modal .speech-cloud { padding:12px 16px; } .cinematic-modal .speech-cloud p { font-size:15px; } .cinematic-modal .story-caption { padding:14px 18px; } }
+
+.room-settings { border:1px solid var(--border); border-radius:8px; padding:16px; margin:20px 0; }
+.room-settings legend { font-weight:700; padding:0 8px; color:var(--primary); }
+.settings-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.settings-grid label { display:flex; flex-direction:column; gap:8px; font-size:14px; }
+.settings-grid select { width:100%; }
+.bot-badge { font-size:10px!important; letter-spacing:.05em; padding:2px 5px; margin-left:6px; color:#ffbd82!important; background:#30251b; border:1px solid #765234; border-radius:4px; display:inline-block; }
+.race-status { padding:16px; background:#30251b; color:#ffcfaa; border:1px solid #765234; border-radius:8px; line-height:1.6; }
+.leaderboard { padding:20px; border:1px solid var(--border); border-radius:8px; margin-bottom:16px; }
+.leaderboard h3 { margin:0; font-size:17px; }
+.leaderboard ol { list-style:none; margin:12px 0 0; padding:0; }
+.leaderboard li { display:flex; gap:12px; padding:12px 0; border-top:1px solid var(--border); }
+.leaderboard li>span { color:var(--primary); min-width:20px; font-family:"Space Mono",monospace; }
+.leaderboard li small { display:block; font-size:12px; color:#b5ada5; margin-top:4px; }
+.leaderboard li .bot-badge { display:inline-block; margin-top:0; }
+.leaderboard li.you strong { color:var(--primary); }
+.race-review { padding:16px; border:1px solid var(--border); border-radius:8px; margin-bottom:16px; }
+.race-review summary { min-height:44px; cursor:pointer; color:var(--primary); display:flex; align-items:center; }
+.race-review article { padding:12px 0; border-top:1px solid var(--border); } .race-review p { line-height:1.5; font-size:14px; } .race-review strong { color:var(--success); font-size:14px; }
+@media(max-width:500px) { .settings-grid { grid-template-columns:1fr; } .micro { font-size:11px!important; } .brand-sub { font-size:9px; } }
+
+@media(max-width:760px) and (min-height:780px) { .cinematic-modal .manga-image { height:20dvh; } }
+
+.primary-button:hover:not(:disabled) { background:#ffb576; border-color:#ffb576; }
+.primary-button { color:#17130f; }
+.session-strip>.icon-button { min-width:44px; min-height:44px; width:44px; height:44px; }
+.lock-card.active:not(.solved) { background:#30251b; border-color:var(--primary); }
+.main-board, .team-sidebar, .team-sidebar>* { min-width:0; }
+.player-row strong, .leaderboard strong { overflow-wrap:anywhere; }
+@media(max-width:680px) {
+ .play-layout { grid-template-columns:minmax(0,1fr); }
+ .team-sidebar { grid-template-columns:repeat(2,minmax(0,1fr)); }
+ .leaderboard, .race-review { grid-column:1/-1; }
+ .puzzle-top>div:first-child { min-width:0; }
+ .room-title { overflow-wrap:anywhere; }
+ .puzzle-top { gap:12px; }
+}
+@media(max-width:400px) { .team-sidebar { grid-template-columns:minmax(0,1fr); } .puzzle-top { flex-wrap:wrap; } .puzzle-label { flex-wrap:wrap; } }

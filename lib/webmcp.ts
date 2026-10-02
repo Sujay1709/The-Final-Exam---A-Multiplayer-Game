@@ -24,7 +24,7 @@ export function useGameTools(game: Snapshot | null) {
     const tool = {
       name: "read_escape_room_status",
       description:
-        "Read the current shared escape room, player names, puzzle descriptions, score and timer. Does not submit answers or reveal hidden solutions.",
+        "Read your current escape-room view, public player profiles, your puzzle descriptions, score and timer. Does not submit answers or reveal hidden solutions.",
       inputSchema: {
         type: "object",
         properties: {},
@@ -46,6 +46,7 @@ export function useGameTools(game: Snapshot | null) {
             message: "Create or join a room using the visible controls.",
           };
         return {
+          mode:g.mode,
           code: g.code,
           phase: g.phase,
           room: g.roomIndex + 1,

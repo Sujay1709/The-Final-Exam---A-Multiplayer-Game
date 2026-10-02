@@ -22,6 +22,8 @@ import {
   TriangleAlert,
   CheckCheck,
 } from "lucide-react";
+import { RoomSettings } from "./room-settings";
+import { GAME_RULES } from "@/lib/game-settings";
 import { Avatar } from "./avatar";
 import type { Preferences } from "@/lib/use-preferences";
 import { Progress } from "@/components/ui/progress";
@@ -43,8 +45,8 @@ import {
   type Session,
 } from "@/lib/game-types";
 type Props = {
-  preferences:Preferences;
-  updatePreferences:(patch:Partial<Preferences>)=>void;
+  preferences: Preferences;
+  updatePreferences: (patch: Partial<Preferences>) => void;
   game: Snapshot;
   session: Session;
   busy: string;
@@ -61,7 +63,8 @@ const formatTime = (n: number) =>
     .toString()
     .padStart(2, "0")}:${(n % 60).toString().padStart(2, "0")}`;
 export function Game({
-  preferences,updatePreferences,
+  preferences,
+  updatePreferences,
   game: g,
   session,
   busy,
@@ -70,13 +73,16 @@ export function Game({
   error,
   action,
 }: Props) {
+  const race = g.mode === "race",
+    rules = GAME_RULES[g.gameDifficulty];
+  const humanPlayers = g.players.filter((p) => p.kind !== "bot" && !p.left);
   const host = g.hostId === session.playerId,
     me = g.players.find((p) => p.id === session.playerId);
   const [selected, setSelected] = useState(""),
     [drafts, setDrafts] = useState<Record<string, string>>({}),
     [chat, setChat] = useState("");
-  const sound=preferences.sound;
-  const setSound=(sound:boolean)=>updatePreferences({sound});
+  const sound = preferences.sound;
+  const setSound = (sound: boolean) => updatePreferences({ sound });
   const audio = useRef<AudioContext | null>(null);
   const log = useRef<HTMLDivElement>(null),
     seen = useRef<Set<string>>(new Set());
@@ -122,12 +128,27 @@ export function Game({
     g.events.forEach((e) => seen.current.add(e.id));
     if (log.current) log.current.scrollTop = log.current.scrollHeight;
   }, [g.events, sound]);
-  useEffect(()=>{
-    const unlock=()=>{if(!sound)return;try{audio.current??=new AudioContext();void audio.current.resume();}catch{}};
-    document.addEventListener("pointerdown",unlock);document.addEventListener("keydown",unlock);
-    return ()=>{document.removeEventListener("pointerdown",unlock);document.removeEventListener("keydown",unlock);};
-  },[sound]);
-  useEffect(()=>()=>{void audio.current?.close();},[]);
+  useEffect(() => {
+    const unlock = () => {
+      if (!sound) return;
+      try {
+        audio.current ??= new AudioContext();
+        void audio.current.resume();
+      } catch {}
+    };
+    document.addEventListener("pointerdown", unlock);
+    document.addEventListener("keydown", unlock);
+    return () => {
+      document.removeEventListener("pointerdown", unlock);
+      document.removeEventListener("keydown", unlock);
+    };
+  }, [sound]);
+  useEffect(
+    () => () => {
+      void audio.current?.close();
+    },
+    [],
+  );
   async function copy(text: string) {
     try {
       await navigator.clipboard.writeText(text);
@@ -155,7 +176,7 @@ export function Game({
     if (next?.puzzles.find((p) => p.id === puzzle.id)?.solved)
       setDrafts((d) => ({ ...d, [inputKey]: "" }));
   }
-  const readyCount = g.players.filter(
+  const readyCount = humanPlayers.filter(
     (p) => p.ready && now - p.lastSeen < 30000,
   ).length;
   return (
@@ -261,7 +282,7 @@ export function Game({
                 </span>
                 <span>
                   <CheckCheck size={17} />
-                  {readyCount}/{g.players.length} ready
+                  {readyCount}/{humanPlayers.length} humans ready
                 </span>
               </div>
               <div className="lobby-actions">
@@ -283,8 +304,8 @@ export function Game({
                     disabled={
                       !!busy ||
                       !connected ||
-                      readyCount !== g.players.length ||
-                      g.players.length < 2
+                      readyCount !== humanPlayers.length ||
+                      humanPlayers.length < 2
                     }
                     onClick={() => void action("start")}
                   >
@@ -296,17 +317,29 @@ export function Game({
                 )}
               </div>
               <p className="help-text">
-                {g.players.length < 2
+                {humanPlayers.length < 2
                   ? "At least two players are needed. Share the code with a friend."
                   : "Everyone must be connected and ready. The host plays too."}
               </p>
-              <p className="help-text">Change your alias and character in Player settings before the experiment starts.</p>
+              <p className="help-text">
+                Change your alias and character in Player settings before the
+                experiment starts.
+              </p>
+              <RoomSettings
+                settings={g}
+                difficulty={g.difficulty}
+                disabled={!host || !!busy}
+                onChange={(s, d) =>
+                  void action("settings", { ...s, difficulty: d })
+                }
+              />
               <div className="briefing">
                 <ShieldAlert size={21} />
                 <div>
                   <strong>Your briefing</strong>
                   <p>
-                    Five rooms. Three locks each. Four minutes on the clock.
+                    Five rooms. Three locks each. {rules.main / 60} minutes on
+                    the clock.
                     <br />
                     Miss a deadline and Voss sends you to detention.
                   </p>
@@ -343,9 +376,21 @@ export function Game({
                 )}
               </h1>
               <p className="board-intro">{g.result}</p>
+              {race && (
+                <p className="race-status" role="status">
+                  {g.winnerId
+                    ? `${g.players.find((p) => p.id === g.winnerId)?.name ?? "The winner"} escaped first.`
+                    : "No escape yet."}{" "}
+                  {g.matchComplete
+                    ? "Final results are ready."
+                    : "Other racers are still playing. The room can restart when everyone finishes or leaves."}
+                </p>
+              )}
               <div className="result-stats">
                 <div>
-                  <span className="micro">TEAM SCORE</span>
+                  <span className="micro">
+                    {race ? "YOUR SCORE" : "TEAM SCORE"}
+                  </span>
                   <strong>{g.score.toLocaleString()}</strong>
                 </div>
                 <div>
@@ -370,11 +415,11 @@ export function Game({
                 {host ? (
                   <button
                     className="primary-button"
-                    disabled={!!busy}
+                    disabled={!!busy || !g.matchComplete}
                     onClick={() => void action("restart")}
                   >
                     <RotateCcw size={17} />
-                    Return team to lobby
+                    Return room to lobby
                   </button>
                 ) : (
                   <p className="muted">Your host can restart the experiment.</p>
@@ -416,7 +461,7 @@ export function Game({
               </h1>
               <p className="board-intro">
                 All three locks are open. Your remaining seconds have been added
-                to the team score.
+                to {race ? "your score." : "the team score."}
               </p>
               <div className="story-panel">
                 <span className="micro">THE STORY SO FAR</span>
@@ -433,7 +478,13 @@ export function Game({
                   </article>
                 ))}
               </div>
-              {host ? (
+              {race ? (
+                <p className="race-status" role="status">
+                  Next room opens automatically in{" "}
+                  {Math.max(0, Math.ceil(((g.nextRoomAt ?? now) - now) / 1000))}{" "}
+                  seconds. Explanations remain in Your solved questions.
+                </p>
+              ) : host ? (
                 <button
                   className="primary-button"
                   disabled={!!busy || !connected}
@@ -484,7 +535,9 @@ export function Game({
                 value={Math.min(
                   100,
                   (seconds /
-                    (detention ? [60, 90, 120][g.punishment - 1] : 240)) *
+                    (detention
+                      ? rules.detention[g.punishment - 1]
+                      : rules.main)) *
                     100,
                 )}
                 className={`time-progress ${seconds <= 30 ? "urgent" : ""}`}
@@ -606,7 +659,7 @@ export function Game({
                         <span>Numbers, decimals, or fractions. No units.</span>
                         <span>
                           Correct +20s{!detention ? " / +100 pts" : ""} · Wrong
-                          −10s
+                          −{rules.wrong}s
                         </span>
                       </div>
                       {seconds === 0 && (
@@ -628,7 +681,7 @@ export function Game({
                           }
                         >
                           <Lightbulb size={16} />
-                          Reveal a hint<span>−15 seconds</span>
+                          Reveal a hint<span>−{rules.hint} seconds</span>
                         </button>
                       )}
                     </>
@@ -637,15 +690,63 @@ export function Game({
               )}
               <p className="help-text">
                 <Users size={14} />
-                Choose a lock to show your teammates where you're working.
-                Anyone can help or submit.
+                {race
+                  ? "Only your answers, hints, and penalties affect your escape."
+                  : "Choose a lock to show your teammates where you are working. Anyone can help or submit."}
               </p>
             </>
           )}
         </section>
         <aside className="team-sidebar">
+          {race && g.phase !== "lobby" && (
+            <div className="leaderboard">
+              <h3>
+                {g.matchComplete ? "Final race results" : "Live race standings"}
+              </h3>
+              <p className="help-text">First successful escape wins.</p>
+              <ol>
+                {g.leaderboard.map((p, i) => {
+                  const player = g.players.find((x) => x.id === p.playerId);
+                  return (
+                    <li
+                      key={p.playerId}
+                      className={p.playerId === session.playerId ? "you" : ""}
+                    >
+                      <span>
+                        {p.place ??
+                          (p.phase === "lost" || p.phase === "left"
+                            ? "—"
+                            : i + 1)}
+                      </span>
+                      <div>
+                        <strong>
+                          {player?.name}
+                          {player?.kind === "bot" && (
+                            <small className="bot-badge">BOT</small>
+                          )}
+                        </strong>
+                        <small>
+                          {p.phase === "won"
+                            ? "Escaped"
+                            : p.phase === "lost"
+                              ? "Did not escape"
+                              : p.phase === "left"
+                                ? "Left race"
+                                : p.phase === "detention"
+                                  ? `Detention ${p.punishment}`
+                                  : `Room ${p.roomIndex + 1}`}{" "}
+                          · {p.solvedCount}/15 locks · {p.score} pts
+                        </small>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          )}
+
           <div className="score-panel">
-            <span className="micro">TEAM SCORE</span>
+            <span className="micro">{race ? "YOUR SCORE" : "TEAM SCORE"}</span>
             <strong>
               {g.score.toLocaleString()}
               <small>PTS</small>
@@ -681,29 +782,38 @@ export function Game({
           <div className="team-panel">
             <div className="sidebar-heading">
               <Users size={17} />
-              <h3>Your team</h3>
+              <h3>{race ? "Racers" : "Your team"}</h3>
               <span>{g.players.length}/8</span>
             </div>
             <div className="player-list">
               {g.players.map((p, i) => (
                 <div className="player-row" key={p.id}>
-                  <Avatar profile={p.avatar} label={p.name} className="roster-avatar"/>
+                  <Avatar
+                    profile={p.avatar}
+                    label={p.name}
+                    className="roster-avatar"
+                  />
                   <div>
                     <strong>
                       {p.name}
+                      {p.kind === "bot" && (
+                        <small className="bot-badge">BOT</small>
+                      )}
                       {p.id === session.playerId && <small> (you)</small>}
                     </strong>
                     <span>
                       {p.id === g.hostId ? "Host · " : ""}
-                      {now - p.lastSeen > 30000
-                        ? "Disconnected"
-                        : g.phase === "lobby"
-                          ? p.ready
-                            ? "Ready"
-                            : "Not ready"
-                          : p.working
-                            ? "Solving a lock"
-                            : "In the laboratory"}
+                      {p.left
+                        ? "Left race"
+                        : now - p.lastSeen > 30000
+                          ? "Disconnected"
+                          : g.phase === "lobby"
+                            ? p.ready
+                              ? "Ready"
+                              : "Not ready"
+                            : p.working
+                              ? "Solving a lock"
+                              : "In the laboratory"}
                     </span>
                   </div>
                   {now - p.lastSeen < 30000 &&
@@ -712,6 +822,19 @@ export function Game({
               ))}
             </div>
           </div>
+          {!!g.review.length && (
+            <details className="race-review">
+              <summary>Your solved questions</summary>
+              {g.review.map((q) => (
+                <article key={q.id}>
+                  <span className="micro">{q.room}</span>
+                  <h4>{q.title}</h4>
+                  <p>{q.prompt}</p>
+                  <strong>{q.solution}</strong>
+                </article>
+              ))}
+            </details>
+          )}
           <div className="room-track">
             <span className="micro">ESCAPE ROUTE</span>
             {ROOM_INFO.map((r, i) => (
@@ -752,7 +875,7 @@ export function Game({
                 ))
               ) : (
                 <p className="muted">
-                  Your team’s messages and discoveries appear here.
+                  Room messages and your discoveries appear here.
                 </p>
               )}
             </div>

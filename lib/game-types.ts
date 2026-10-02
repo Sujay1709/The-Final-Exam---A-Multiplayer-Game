@@ -1,9 +1,12 @@
+import type { GameSettings } from "./game-settings.ts";
 import type { AvatarProfile } from "./profiles.ts";
 export type Difficulty = "junior" | "senior";
 export type Phase = "lobby" | "main" | "detention" | "cleared" | "won" | "lost";
 export interface Player {
   id: string;
   name: string;
+  kind: "human" | "bot";
+  left?: boolean;
   avatar: AvatarProfile;
   ready: boolean;
   lastSeen: number;
@@ -26,7 +29,29 @@ export interface GameEvent {
   kind: "story" | "success" | "warning" | "chat";
   at: number;
 }
-export interface Snapshot {
+export interface PublicProgress {
+  playerId: string;
+  phase: Phase | "left";
+  roomIndex: number;
+  solvedCount: number;
+  score: number;
+  punishment: number;
+  finishedAt: number | null;
+  place: number | null;
+}
+export interface ReviewPuzzle {
+  id: string;
+  title: string;
+  prompt: string;
+  solution: string;
+  room: string;
+}
+export interface Snapshot extends GameSettings {
+  matchComplete: boolean;
+  winnerId: string | null;
+  leaderboard: PublicProgress[];
+  review: ReviewPuzzle[];
+  nextRoomAt: number | null;
   code: string;
   difficulty: Difficulty;
   phase: Phase;

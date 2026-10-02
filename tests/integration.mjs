@@ -11,6 +11,7 @@ async function request(op, args = {}, session) {
 }
 const created = await request("create", {
   name: "Integration Host",
+  mode:"coop",
   difficulty: "junior",
 });
 assert.equal(created.status, 200, created.error);
@@ -63,6 +64,8 @@ const chat = await request(
 );
 assert.equal(chat.status, 200);
 assert.ok(chat.game.events.some((e) => e.text.includes("missing page")));
+// Any participant may win the concurrent solve above; allow that player’s submission interval to elapse.
+await new Promise((resolve) => setTimeout(resolve, 850));
 const replayId = randomUUID();
 const wrong = await request(
   "answer",

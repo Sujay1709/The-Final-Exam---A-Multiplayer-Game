@@ -31,6 +31,7 @@ export function useGame() {
       return;
     latest.current = next;
     setGame(next);
+    setClock(Date.now());
     setOffset(next.serverNow - (sent + Date.now()) / 2);
   }, []);
   useEffect(() => {
