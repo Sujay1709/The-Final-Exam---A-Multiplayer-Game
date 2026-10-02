@@ -216,3 +216,8 @@ Local project location: `/Users/sujaygopal/Desktop/MyProjects/The-Final-Exam---A
 Choose one of eight original SVG manga characters (Nova, Kai, Mira, Echo, Rin, Axel, Zuri, Theo). Skin, hair, outfit and accessories are cosmetic. An anonymous alias is generated automatically; edit it within 20 characters. Aliases must be unique within a room (case insensitive).
 
 Your character, alias, sound and motion preferences are saved on this browser. Preview the character before creating/joining, and use **Player settings** to save character changes in the lobby. Sound and reduced motion remain adjustable during play. Server validation accepts only the catalog choices, and a session can edit only its own public profile. Profiles are not accounts or cross-device identities.
+### Mandatory opening cinematic
+
+Each page load opens the three manga chapters before revealing the homepage: The Missing Credit → The Grudge → The Experiment. Press **Start story** once, then each chapter plays for 12 visible, unpaused seconds. There is no skip or fast-forward control. Escape and outside clicks do not dismiss playback. Pause/resume and sound controls remain available; hidden tabs pause the sequence. Reduced motion removes camera movement while preserving automatic progression.
+
+This is an animated artwork cinematic with an original browser-synthesized laboratory soundtrack, not a rendered video file. Browsers require a user gesture for audio. The original HD manga Voss is the default interactive portrait, with bounded mouse/touch parallax and keyboard movement controls. This is **2.5D motion**, not rotation of a 3D reconstruction. The original full-body Three.js sculpt remains available as an optional view.

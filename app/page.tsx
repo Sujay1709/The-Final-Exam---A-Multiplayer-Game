@@ -33,7 +33,7 @@ export default function Home() {
   const [mode, setMode] = useState("create"),
     [difficulty, setDifficulty] = useState("junior"),
     [rules, setRules] = useState(false);
-  const [storyOpen, setStoryOpen] = useState(false);
+  const [storyOpen, setStoryOpen] = useState(true);
   const api = useGame();
   const {preferences,update} = usePreferences();
   const [settings,setSettings]=useState(false);
@@ -42,15 +42,6 @@ export default function Home() {
   useGameTools(api.game);
   const [code, setCode] = useState("");
   useEffect(() => {
-    try {
-      if (
-        !localStorage.getItem("last-exam-story-seen") &&
-        !localStorage.getItem("last-exam-player")
-      )
-        setStoryOpen(true);
-    } catch {
-      setStoryOpen(true);
-    }
     const q = new URLSearchParams(location.search).get("room");
     if (q) {
       setCode(q.toUpperCase().slice(0, 6));
@@ -59,13 +50,12 @@ export default function Home() {
   }, []);
   function closeStory() {
     setStoryOpen(false);
-    try {
-      localStorage.setItem("last-exam-story-seen", "1");
-    } catch {}
+
   }
   return (
     <div className="app-shell">
       <Toaster theme="dark" position="bottom-right" />
+      <div hidden={storyOpen}>
       <header className="topbar">
         <a className="brand" href="/">
           <span className="brand-mark">
@@ -313,7 +303,9 @@ export default function Home() {
       {(!api.game||api.game.phase==="lobby")&&<><label className="settings-field">Anonymous alias<input value={name} maxLength={20} onChange={e=>setName(e.target.value)}/></label><AliasButton onChange={setName}/><ProfileEditor avatar={preferences.avatar} onChange={avatar=>update({avatar})}/>{api.game&&<button className="primary-button" disabled={!!api.busy||!name.trim()} onClick={async()=>{if(await api.action("profile",{name,avatar:preferences.avatar}))setSettings(false);}}>Save character to room</button>}</>}
       {api.error&&<p className="error-message" role="alert">{api.error}</p>}
       </DialogContent></Dialog>
-      <Prologue open={storyOpen} onClose={closeStory} motionPreference={preferences.reducedMotion} />
+      </div>
+      {storyOpen&&<p className="opening-placeholder">Preparing the professor’s origin story…</p>}
+      <Prologue open={storyOpen} onClose={closeStory} motionPreference={preferences.reducedMotion} soundPreference={preferences.sound} onSoundChange={sound=>update({sound})} />
       <Dialog open={rules} onOpenChange={setRules}>
         <DialogContent className="rules-modal">
           <DialogTitle>The rules of the experiment</DialogTitle>

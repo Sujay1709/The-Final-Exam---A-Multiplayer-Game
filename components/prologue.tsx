@@ -1,22 +1,7 @@
 "use client";
-
-import { useEffect, useState } from "react";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Pause,
-  Play,
-  KeyRound,
-  Film,
-} from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-
+import { useEffect, useRef, useState } from "react";
+import { Pause, Play, Film, Volume2, VolumeX } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 const SCENES = [
   {
     chapter: "The missing credit",
@@ -71,201 +56,36 @@ const SCENES = [
   },
 ] as const;
 
-export function Prologue({
-  open,
-  onClose,
-  motionPreference=false,
-}: {
-  motionPreference?:boolean;
-  open: boolean;
-  onClose: () => void;
-}) {
-  const [scene, setScene] = useState(0);
-  const [playing, setPlaying] = useState(false);
-  const [reducedMotion, setReducedMotion] = useState(false);
-  const [visible, setVisible] = useState(true);
-  const current = SCENES[scene];
-
-  useEffect(() => {
-    const preference = matchMedia("(prefers-reduced-motion: reduce)");
-    const update = () => setReducedMotion(preference.matches || motionPreference);
-    const visibility = () => setVisible(!document.hidden);
-    update();
-    visibility();
-    preference.addEventListener("change", update);
-    document.addEventListener("visibilitychange", visibility);
-    return () => {
-      preference.removeEventListener("change", update);
-      document.removeEventListener("visibilitychange", visibility);
-    };
-  }, [motionPreference]);
-
-  useEffect(() => {
-    if (!open) return;
-    setScene(0);
-    setPlaying(!motionPreference && !matchMedia("(prefers-reduced-motion: reduce)").matches);
-    // Preload the next panels so a scene change never waits on an image download.
-    SCENES.forEach((s) => {
-      const image = new Image();
-      image.src = s.image;
-    });
-  }, [open,motionPreference]);
-
-  useEffect(() => {
-    if (
-      !open ||
-      !playing ||
-      !visible ||
-      scene === SCENES.length - 1 ||
-      reducedMotion
-    )
-      return;
-    const timer = setTimeout(
-      () => setScene((index) => Math.min(index + 1, SCENES.length - 1)),
-      11000,
-    );
-    return () => clearTimeout(timer);
-  }, [open, playing, visible, scene, reducedMotion]);
-
-  function jump(index: number) {
-    setPlaying(false);
-    setScene(Math.max(0, Math.min(index, SCENES.length - 1)));
-  }
-
-  return (
-    <Dialog
-      open={open}
-      onOpenChange={(next) => {
-        if (!next) onClose();
-      }}
-    >
-      <DialogContent className="story-modal" showCloseButton={false}>
-        <div className="story-header">
-          <div>
-            <span className="eyebrow">
-              <Film size={15} />
-              THE PROFESSOR’S ORIGIN STORY
-            </span>
-            <DialogTitle className="story-dialog-title">
-              Before the doors locked.
-            </DialogTitle>
-          </div>
-          <button className="text-button story-skip" onClick={onClose}>
-            Skip story
-          </button>
-        </div>
-        <DialogDescription className="sr-only">
-          A three-scene animated manga prologue. Read how Professor Voss's
-          grudge led him to build an escape room. Pause, navigate scenes, or
-          skip to the game.
-        </DialogDescription>
-        <Tabs
-          value={String(scene)}
-          onValueChange={(value) => jump(Number(value))}
-          className="story-tabs"
-        >
-          <TabsList className="story-chapters">
-            {SCENES.map((s, index) => (
-              <TabsTrigger key={s.chapter} value={String(index)}>
-                <span>0{index + 1}</span>
-                {s.chapter}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          <TabsContent
-            value={String(scene)}
-            key={scene}
-            className="story-scene"
-          >
-            <div
-              className={`story-stage scene-${scene} ${playing && visible && !reducedMotion ? "story-animating" : ""}`}
-            >
-              <img
-                className="manga-image"
-                src={current.image}
-                alt={current.alt}
-                width={1672}
-                height={941}
-                fetchPriority="high"
-              />
-              <div className="scene-stamp">CHAPTER 0{scene + 1}</div>
-              <div className="speech-clouds">
-                {current.dialogue.map((line, index) => (
-                  <blockquote
-                    className={`speech-cloud cloud-${index}`}
-                    key={line.text}
-                  >
-                    <cite>{line.speaker}</cite>
-                    <p>{line.text}</p>
-                  </blockquote>
-                ))}
-              </div>
-              {playing &&
-                visible &&
-                !reducedMotion &&
-                scene < SCENES.length - 1 && (
-                  <div className="story-time-bar" aria-hidden="true">
-                    <span />
-                  </div>
-                )}
-            </div>
-            <div
-              className="story-caption"
-              aria-live="polite"
-              aria-atomic="true"
-            >
-              <span className="micro">{current.when}</span>
-              <h2>{current.title}</h2>
-              <p>{current.narration}</p>
-            </div>
-          </TabsContent>
-        </Tabs>
-        <div className="story-controls">
-          <button
-            className="secondary-button"
-            onClick={() => jump(scene - 1)}
-            disabled={scene === 0}
-          >
-            <ArrowLeft size={16} />
-            Back
-          </button>
-          <div className="story-play-control">
-            {!reducedMotion && scene < SCENES.length - 1 ? (
-              <button
-                className="text-button"
-                onClick={() => setPlaying(!playing)}
-                aria-label={playing ? "Pause story" : "Play story"}
-              >
-                {playing ? <Pause size={16} /> : <Play size={16} />}
-                <span>{playing ? "Pause" : "Play"}</span>
-              </button>
-            ) : (
-              <span className="micro">
-                {reducedMotion ? "READ AT YOUR PACE" : "THE STAGE IS SET"}
-              </span>
-            )}
-            <span className="story-page-count">0{scene + 1} / 03</span>
-          </div>
-          <button
-            className="primary-button"
-            onClick={() =>
-              scene === SCENES.length - 1 ? onClose() : jump(scene + 1)
-            }
-          >
-            {scene === SCENES.length - 1 ? (
-              <>
-                <KeyRound size={16} />
-                Enter the lab
-              </>
-            ) : (
-              <>
-                Next scene
-                <ArrowRight size={16} />
-              </>
-            )}
-          </button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
+// Each chapter receives twelve visible, unpaused seconds. No forward/skip path.
+export function Prologue({open,onClose,motionPreference=false,soundPreference=false,onSoundChange}:{open:boolean;onClose:()=>void;motionPreference?:boolean;soundPreference?:boolean;onSoundChange?:(sound:boolean)=>void}) {
+ const [scene,setScene]=useState(0),[started,setStarted]=useState(false),[playing,setPlaying]=useState(false),[sound,setSound]=useState(soundPreference),[reduced,setReduced]=useState(false),[visible,setVisible]=useState(true),[elapsed,setElapsed]=useState(0);
+ const elapsedRef=useRef(0),audio=useRef<AudioContext|null>(null),complete=useRef(onClose);complete.current=onClose;
+ const current=SCENES[scene];
+ useEffect(()=>{const m=matchMedia("(prefers-reduced-motion: reduce)");const update=()=>setReduced(m.matches||motionPreference);const show=()=>setVisible(!document.hidden);update();show();m.addEventListener("change",update);document.addEventListener("visibilitychange",show);return()=>{m.removeEventListener("change",update);document.removeEventListener("visibilitychange",show);};},[motionPreference]);
+ useEffect(()=>{if(!open)return;setScene(0);setStarted(false);setPlaying(false);elapsedRef.current=0;setElapsed(0);SCENES.forEach(s=>{const i=new Image();i.src=s.image;});},[open]);
+ useEffect(()=>{if(!open||!started||!playing||!visible)return;let last=performance.now();const tick=setInterval(()=>{const now=performance.now();elapsedRef.current+=now-last;last=now;setElapsed(elapsedRef.current);if(elapsedRef.current>=12000){elapsedRef.current=0;setElapsed(0);if(scene===2){setPlaying(false);complete.current();}else setScene(i=>i+1);}},100);return()=>clearInterval(tick);},[open,started,playing,visible,scene]);
+ // A local synthesized soundtrack avoids downloads, licensing, and external audio services.
+ useEffect(()=>{const ctx=audio.current;if(!ctx||!sound||!playing||!visible||!open)return;
+  const master=ctx.createGain();master.gain.value=.035;master.connect(ctx.destination);
+  const roots=[130.81,110,146.83];const voices=[1,1.5,2.01].map((ratio,i)=>{const o=ctx.createOscillator(),v=ctx.createGain();o.type=i===2?"sine":"triangle";o.frequency.value=roots[scene]*ratio;v.gain.value=i===0?.5:.2;o.connect(v);v.connect(master);o.start();return o;});
+  const pulse=setInterval(()=>{master.gain.setTargetAtTime(.015,ctx.currentTime,.15);master.gain.setTargetAtTime(.035,ctx.currentTime+.5,.3);},1500);
+  return()=>{clearInterval(pulse);voices.forEach(o=>{o.stop();o.disconnect();});master.disconnect();};
+ },[scene,sound,playing,visible,open]);
+ useEffect(()=>()=>{void audio.current?.close();},[]);
+ async function enableAudio(){try{audio.current??=new AudioContext();await audio.current.resume();}catch{setSound(false);}}
+ function toggleSound(){const next=!sound;setSound(next);onSoundChange?.(next);if(next)void enableAudio();}
+ function begin(){void enableAudio();setStarted(true);setPlaying(true);}
+ return <Dialog open={open}><DialogContent className="story-modal cinematic-modal" showCloseButton={false} onEscapeKeyDown={e=>e.preventDefault()} onPointerDownOutside={e=>e.preventDefault()} onInteractOutside={e=>e.preventDefault()}>
+  <div className="story-header"><div><span className="eyebrow"><Film size={15}/>THE PROFESSOR’S ORIGIN STORY</span><DialogTitle className="story-dialog-title">Before the doors locked.</DialogTitle></div><span className="micro">36 SECOND OPENING</span></div>
+  <DialogDescription className="sr-only">A mandatory cinematic with three automatically advancing manga chapters. Start playback, pause, or control sound. The homepage opens after all chapters. Reduced motion removes camera movement without skipping the story.</DialogDescription>
+  <div className="story-chapters cinematic-chapters" aria-label="Story progress">{SCENES.map((s,i)=><span key={s.chapter} className={scene===i?"current":""} aria-current={scene===i?"step":undefined}>0{i+1} {s.chapter}</span>)}</div>
+  <div className="story-scene" key={scene}><div className={`story-stage scene-${scene} ${started&&!reduced?"story-animating":""}`}>
+   <img className="manga-image" style={{animationPlayState:playing&&visible?"running":"paused"}} src={current.image} alt={current.alt} width={1672} height={941} fetchPriority="high"/>
+   <div className="scene-stamp">CHAPTER 0{scene+1}</div><div className="speech-clouds">{current.dialogue.map((line,i)=><blockquote className={`speech-cloud cloud-${i}`} key={line.text}><cite>{line.speaker}</cite><p>{line.text}</p></blockquote>)}</div>
+   <div className="cinematic-progress" role="progressbar" aria-label="Chapter playback" aria-valuenow={Math.min(100,Math.round(elapsed/120))} aria-valuemin={0} aria-valuemax={100}><span style={{width:`${Math.min(100,elapsed/120)}%`}}/></div>
+  </div><div className="story-caption" aria-live="polite" aria-atomic="true"><span className="micro">{current.when}</span><h2>{current.title}</h2><p>{current.narration}</p></div></div>
+  <div className="story-controls"><button className="text-button cinematic-sound" onClick={toggleSound} aria-label={sound?"Mute story soundtrack":"Enable story soundtrack"}>{sound?<Volume2 size={18}/>:<VolumeX size={18}/>}Sound {sound?"on":"off"}</button>
+  {started?<button className="secondary-button" onClick={()=>setPlaying(p=>!p)} aria-label={playing?"Pause story":"Resume story"}>{playing?<Pause size={18}/>:<Play size={18}/>} {playing?"Pause":"Resume"}</button>:<button className="primary-button" onClick={begin}><Play size={18}/>Start story</button>}
+  <span className="micro">{started?`CHAPTER ${scene+1} / 3 · ${playing?"PLAYING":"PAUSED"}`:"ORIGINAL LAB SOUNDSCAPE"}</span></div>
+ </DialogContent></Dialog>;
 }

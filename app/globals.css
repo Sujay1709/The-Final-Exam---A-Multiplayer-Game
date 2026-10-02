@@ -2090,3 +2090,27 @@ select:focus-visible, [role="radio"]:focus-visible, [role="tab"]:focus-visible {
 .profile-modal { max-height:85dvh; overflow-y:auto; }
 .roster-avatar { width:44px; height:48px; }
 html[data-reduce-motion=true] *, html[data-reduce-motion=true] *::before, html[data-reduce-motion=true] *::after { animation-duration:.01ms!important; transition-duration:.01ms!important; scroll-behavior:auto!important; }
+[hidden] { display:none!important; }
+.opening-placeholder { text-align:center; margin-top:35vh; color:#d5c7b9; }
+.voss-view-choice { position:absolute; z-index:3; top:48px; left:12px; display:flex; gap:6px; }
+.voss-view-choice button { font-size:12px; background:#181a17e6; border:1px solid #62503d; color:var(--foreground); border-radius:6px; padding:8px 12px; }
+.voss-view-choice button[aria-pressed=true] { border-color:var(--primary); color:var(--primary); }
+.manga-motion-panel { position:absolute; inset:0 0 48px; overflow:hidden; touch-action:pan-y; }
+.manga-moving-art { position:absolute; inset:0; transition:transform .14s ease-out; }
+.manga-moving-art .voss-fallback { object-position:50% 28%; }
+.cinematic-chapters { display:flex; gap:0; padding:0!important; }
+.cinematic-chapters>span { flex:1; text-align:center; padding:14px 8px; font-size:13px; border-bottom:2px solid transparent; color:#b5ada5; }
+.cinematic-chapters>span.current { color:var(--primary); border-color:var(--primary); background:#30251b; }
+.cinematic-progress { position:absolute; bottom:0; left:0; right:0; height:4px; background:#222; }
+.cinematic-progress span { display:block; height:100%; background:var(--primary); }
+.cinematic-modal .story-controls { flex-wrap:wrap; gap:12px; }
+.cinematic-modal .manga-image { animation-duration:12s; }
+.cinematic-sound svg { display:block!important; }
+@media(max-width:600px) { .cinematic-chapters>span { font-size:11px; padding:12px 4px; } .cinematic-modal .story-controls { justify-content:center; } .cinematic-modal .story-header { gap:8px; } .cinematic-modal .story-header>.micro { display:none; } .voss-controls span { font-size:10px; } }
+@media(prefers-reduced-motion:reduce) { .manga-moving-art { transition:none; } }
+
+.cinematic-modal { display:flex!important; flex-direction:column; }
+.cinematic-modal .story-scene { min-height:0; overflow-y:auto; }
+.cinematic-modal .story-controls { position:relative; flex-shrink:0; }
+.cinematic-modal .story-header, .cinematic-modal .story-chapters { flex-shrink:0; }
+@media(max-width:760px) { .cinematic-modal .manga-image { height:min(28dvh,260px); aspect-ratio:auto; } .cinematic-modal .story-stage { height:auto; } .cinematic-modal .speech-cloud { padding:12px 16px; } .cinematic-modal .speech-cloud p { font-size:15px; } .cinematic-modal .story-caption { padding:14px 18px; } }
