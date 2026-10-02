@@ -14,6 +14,12 @@
 - Preserved HD manga Voss with interactive 2.5D movement; optional original full-body Three.js sculpt.
 - Mandatory opening cinematic, readable white speech clouds, original local soundtrack, and pause/resume.
 
+## Preview
+
+![Orange interface and preserved manga Voss](docs/orange-home-preview.jpg)
+
+[Opening cinematic](docs/cinematic-preview.jpg) · [Live race](docs/race-preview.jpg)
+
 ## Backstory and cinematic
 
 Thirty years ago, Elias Voss spent months on his college team’s mathematics research. At the science fair, his friends received the award while his name was missing. He walked away before they could explain. Their letters stayed unopened; a printing error became a betrayal in his mind.

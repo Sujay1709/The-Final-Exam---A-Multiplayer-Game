@@ -64,6 +64,8 @@ const chat = await request(
 );
 assert.equal(chat.status, 200);
 assert.ok(chat.game.events.some((e) => e.text.includes("missing page")));
+// Any participant may win the concurrent solve above; allow that player’s submission interval to elapse.
+await new Promise((resolve) => setTimeout(resolve, 850));
 const replayId = randomUUID();
 const wrong = await request(
   "answer",

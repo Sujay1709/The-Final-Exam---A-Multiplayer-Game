@@ -240,6 +240,7 @@ export default function ProfessorScene({
       box(0.65 - i * 0.13, 0.025, 0.02, white, board, 0, 0.2 - i * 0.2, 0.06);
     let frame = 0,
       visible = true,
+      contextLost = false,
       stopped = false;
     const motion = matchMedia("(prefers-reduced-motion: reduce)");
     let osReduced = motion.matches;
@@ -267,14 +268,14 @@ export default function ProfessorScene({
     };
     const loop = () => {
       frame = 0;
-      if (!visible || document.hidden || stopped) return;
+      if (!visible || document.hidden || stopped || contextLost) return;
       render();
       if (!reducedMotion && !osReduced) frame = requestAnimationFrame(loop);
     };
     const restart = () => {
       cancelAnimationFrame(frame);
       frame = 0;
-      if (visible && !document.hidden) loop();
+      if (visible && !document.hidden && !contextLost) loop();
     };
     draw.current = restart;
     const resize = new ResizeObserver(() => {
@@ -300,6 +301,8 @@ export default function ProfessorScene({
     document.addEventListener("visibilitychange", restart);
     const onLost = (e: Event) => {
       e.preventDefault();
+      contextLost = true;
+      cancelAnimationFrame(frame);
       setFailed(true);
     };
     renderer.domElement.addEventListener("webglcontextlost", onLost);
@@ -373,6 +376,7 @@ export default function ProfessorScene({
       <div className="voss-controls">
         <button
           type="button"
+          disabled={failed}
           onClick={() => rotate(-0.3)}
           aria-label="Rotate professor left"
         >
@@ -381,6 +385,7 @@ export default function ProfessorScene({
         <span>{failed ? "Portrait mode" : "Meet Voss · drag or tap"}</span>
         <button
           type="button"
+          disabled={failed}
           onClick={() => rotate(0.3)}
           aria-label="Rotate professor right"
         >

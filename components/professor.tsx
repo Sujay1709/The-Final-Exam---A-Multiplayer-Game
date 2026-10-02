@@ -69,9 +69,6 @@ export function Professor({
             className="manga-motion-panel"
             onPointerMove={point}
             onPointerDown={() => !reduced && rotate(pose.x > 0.2 ? -0.6 : 0.6)}
-            onPointerLeave={(e) =>
-              e.pointerType === "mouse" && setPose({ x: 0, y: 0 })
-            }
             style={{ perspective: 900 }}
           >
             <div
