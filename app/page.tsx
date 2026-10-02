@@ -30,21 +30,12 @@ export default function Home() {
   const [mode, setMode] = useState("create"),
     [difficulty, setDifficulty] = useState("junior"),
     [rules, setRules] = useState(false);
-  const [storyOpen, setStoryOpen] = useState(false);
+  const [storyOpen, setStoryOpen] = useState(true);
   const api = useGame();
   useGameTools(api.game);
   const [name, setName] = useState(""),
     [code, setCode] = useState("");
   useEffect(() => {
-    try {
-      if (
-        !localStorage.getItem("last-exam-story-seen") &&
-        !localStorage.getItem("last-exam-player")
-      )
-        setStoryOpen(true);
-    } catch {
-      setStoryOpen(true);
-    }
     const q = new URLSearchParams(location.search).get("room");
     if (q) {
       setCode(q.toUpperCase().slice(0, 6));
@@ -53,13 +44,12 @@ export default function Home() {
   }, []);
   function closeStory() {
     setStoryOpen(false);
-    try {
-      localStorage.setItem("last-exam-story-seen", "1");
-    } catch {}
+
   }
   return (
     <div className="app-shell">
       <Toaster theme="dark" position="bottom-right" />
+      <div hidden={storyOpen}>
       <header className="topbar">
         <a className="brand" href="/">
           <span className="brand-mark">
@@ -296,6 +286,8 @@ export default function Home() {
         <span>THINK TOGETHER. ESCAPE TOGETHER.</span>
         <span>No downloads. Just brains.</span>
       </footer>
+      </div>
+      {storyOpen&&<p className="opening-placeholder">Preparing the professor’s origin story…</p>}
       <Prologue open={storyOpen} onClose={closeStory} />
       <Dialog open={rules} onOpenChange={setRules}>
         <DialogContent className="rules-modal">
