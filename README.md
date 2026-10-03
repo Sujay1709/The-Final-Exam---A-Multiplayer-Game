@@ -206,3 +206,9 @@ The final branch contains the complete preview. Merge the dependencies in order 
 ### Solve feedback and cosmetic streaks
 
 Correct answers show lock-opening feedback and a streak badge. Three consecutive correct answers earn **Sharp mind**; five earn **Lab legend**. These are cosmetic: +100 points per main lock and +20 seconds per correct answer remain unchanged. A wrong answer or missed deadline breaks the current streak. Co-op shares a team streak; Race keeps each streak private. Mobile answer controls stay visible while scrolling within the question panel. System/browser reduced motion and the player's motion setting disable the lock animation.
+
+### Fresh puzzle variations
+
+New rooms enable **Fresh numbers each round**. Selected arithmetic, fraction, percentage, and algebra locks use bounded seeded templates. Every seat receives the same stored question set; reconnecting cannot regenerate it. Answers and explanations stay on the server until each player's rules allow disclosure. A rematch changes the numbers, while Junior/Senior topics and all time-pressure rules stay the same. Turn the toggle off for the original authored bank; legacy rooms keep their existing questions. Detention questions retain their original prerequisite/code rules.
+
+Run `node tests/fresh-http.mjs` against your local production server to check generated questions through the real multiplayer API.

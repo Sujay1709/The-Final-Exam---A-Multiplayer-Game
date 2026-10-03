@@ -66,6 +66,7 @@ export async function POST(request: Request) {
               a.gameDifficulty ?? NEW_ROOM_SETTINGS.gameDifficulty,
             botSkill: a.botSkill ?? NEW_ROOM_SETTINGS.botSkill,
             fillBots: a.fillBots ?? NEW_ROOM_SETTINGS.fillBots,
+            freshPuzzles: a.freshPuzzles ?? NEW_ROOM_SETTINGS.freshPuzzles,
           });
         } catch (e) {
           throw new GameError((e as Error).message);

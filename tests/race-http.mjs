@@ -10,7 +10,7 @@ async function post(a, status = 200) {
   assert.equal(r.status, status, JSON.stringify(d));
   return d;
 }
-const h = await post({ op: "create", name: "Host" });
+const h = await post({ op: "create", name: "Host", freshPuzzles:false });
 assert.equal(h.game.mode, "race");
 assert.equal(h.game.gameDifficulty, "medium");
 assert.equal(h.game.botSkill, "medium");

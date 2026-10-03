@@ -1,4 +1,5 @@
 import { PUZZLES, DETENTION, type Puzzle } from "./puzzles.ts";
+import { generatePuzzleRooms } from "./puzzle-variations.ts";
 import {
   ROOM_INFO,
   type Difficulty,
@@ -59,6 +60,7 @@ export interface GameState extends Progress, GameSettings {
   seed: number;
   winnerId: string | null;
   finishCount: number;
+  puzzleRooms?: Puzzle[][];
 }
 export interface Action extends Partial<GameSettings> {
   op: string;
@@ -123,6 +125,7 @@ export function normalizeGame(g: GameState): GameState {
   g.gameDifficulty ??= "medium";
   g.botSkill ??= "medium";
   g.fillBots ??= false;
+  g.freshPuzzles ??= false;
   g.seed ??= 1;
   g.winnerId ??= null;
   g.finishCount ??= 0;
@@ -160,6 +163,7 @@ export function createGame(
       gameDifficulty: "medium",
       botSkill: "medium",
       fillBots: false,
+      freshPuzzles: false,
     }),
     code,
     difficulty,
@@ -255,7 +259,7 @@ export function joinGame(
 export function currentPuzzles(g: GameState, p: Progress = g): Puzzle[] {
   return p.phase === "detention"
     ? DETENTION[p.punishment - 1]
-    : PUZZLES[g.difficulty][p.roomIndex];
+    : (g.puzzleRooms ?? PUZZLES[g.difficulty])[p.roomIndex];
 }
 function clearWorking(g: GameState, p: Progress) {
   g.players
@@ -577,6 +581,7 @@ export function mutateGame(g: GameState, a: Action, now: number): GameState {
         gameDifficulty: a.gameDifficulty ?? g.gameDifficulty,
         botSkill: a.botSkill ?? g.botSkill,
         fillBots: a.fillBots ?? g.fillBots,
+        freshPuzzles: a.freshPuzzles ?? g.freshPuzzles,
       });
     } catch (e) {
       throw new GameError((e as Error).message);
@@ -607,6 +612,9 @@ export function mutateGame(g: GameState, a: Action, now: number): GameState {
       throw new GameError("Gather 2–8 human players before starting.");
     if (humans.some((x) => !x.ready || now - x.lastSeen >= 30000))
       throw new GameError("Every human player must be connected and ready.");
+    g.puzzleRooms = g.freshPuzzles
+      ? generatePuzzleRooms(g.difficulty, (g.seed ^ Math.imul(g.run, 2654435761)) >>> 0)
+      : undefined;
     g.phase = "main";
     if (g.mode === "race")
       g.players.forEach((x) => {
@@ -772,7 +780,7 @@ export function snapshot(
               a.playerId.localeCompare(b.playerId),
           )
       : [];
-  const review = PUZZLES[g.difficulty].flatMap((questions, i) =>
+  const review = (g.puzzleRooms ?? PUZZLES[g.difficulty]).flatMap((questions, i) =>
     questions
       .filter((q) => p.solved[q.id])
       .map((q) => ({
@@ -790,6 +798,7 @@ export function snapshot(
     gameDifficulty: g.gameDifficulty,
     botSkill: g.botSkill,
     fillBots: g.fillBots,
+    freshPuzzles: g.freshPuzzles,
     phase: p.phase,
     roomIndex: p.roomIndex,
     hostId: g.hostId,
