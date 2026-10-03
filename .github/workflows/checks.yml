@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "24"
           cache: npm
       - name: Install locked dependencies
         run: npm run install:ci
@@ -32,12 +32,12 @@ jobs:
         run: npm run typecheck
       - name: Build the game
         run: npm run build
-      - name: Start local multiplayer preview
-        run: npm run dev > /tmp/final-exam-server.log 2>&1 &
+      - name: Verify Vercel build output
+        run: node scripts/check-vercel-build.mjs
+      - name: Start production multiplayer preview
+        run: GAME_SQLITE_PATH=/tmp/final-exam-ci.sqlite npm start > /tmp/final-exam-server.log 2>&1 &
       - name: Wait for preview
         run: node scripts/wait-for-game.mjs
-      - name: Initialize disposable local database
-        run: node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_spotty_toad_men.sql
       - name: Test HTTP multiplayer and profile contracts
         run: |
           node tests/integration.mjs
