@@ -5,12 +5,14 @@ export interface GameSettings {
   gameDifficulty: Skill;
   botSkill: Skill;
   fillBots: boolean;
+  freshPuzzles: boolean;
 }
 export const NEW_ROOM_SETTINGS: GameSettings = {
   mode: "race",
   gameDifficulty: "medium",
   botSkill: "medium",
   fillBots: true,
+  freshPuzzles: true,
 };
 export const GAME_RULES = {
   easy: {
@@ -43,7 +45,8 @@ export function validateSettings(
     !["coop", "race"].includes(s.mode) ||
     !["easy", "medium", "hard"].includes(s.gameDifficulty) ||
     !["easy", "medium", "hard"].includes(s.botSkill) ||
-    typeof s.fillBots !== "boolean"
+    typeof s.fillBots !== "boolean" ||
+    typeof s.freshPuzzles !== "boolean"
   )
     throw new Error("Choose valid room settings.");
   return s;

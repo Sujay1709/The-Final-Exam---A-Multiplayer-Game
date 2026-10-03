@@ -12,6 +12,7 @@ async function request(op, args = {}, session) {
 const created = await request("create", {
   name: "Integration Host",
   mode:"coop",
+  freshPuzzles:false,
   difficulty: "junior",
 });
 assert.equal(created.status, 200, created.error);

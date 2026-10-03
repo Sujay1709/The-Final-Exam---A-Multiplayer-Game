@@ -82,11 +82,15 @@ export function RoomSettings({
           Fill empty seats with bots
         </label>
       )}
+      <label className="preference-toggle">
+        <input type="checkbox" checked={settings.freshPuzzles} onChange={e=>change({freshPuzzles:e.target.checked})} />
+        Fresh numbers each round
+      </label>
       <p className="help-text">
         {settings.mode === "race"
           ? "Same questions. Your own timer, locks, hints, and detention. Two ready humans are required; bots fill up to eight seats."
           : "Human teammates share locks, time, hints, score, and detention."}{" "}
-        Mathematics controls question level; time pressure controls the clock.
+        Mathematics controls question level; time pressure controls the clock. Fresh numbers vary selected arithmetic, fractions, and algebra locks.
       </p>
     </fieldset>
   );
