@@ -6,6 +6,7 @@ import {
   type Snapshot,
   type Phase,
   type GameEvent,
+  type AnswerFeedback,
 } from "./game-types.ts";
 import {
   defaultAvatar,
@@ -30,6 +31,10 @@ export interface Progress {
   hinted: string[];
   events: GameEvent[];
   result: string | null;
+  correctCount: number;
+  streak: number;
+  bestStreak: number;
+  lastAnswerFeedback: AnswerFeedback | null;
   wrongCount: number;
   hintCount: number;
   nextRoomAt: number | null;
@@ -86,6 +91,10 @@ const freshProgress = (): Progress => ({
   hinted: [],
   events: [],
   result: null,
+  correctCount: 0,
+  streak: 0,
+  bestStreak: 0,
+  lastAnswerFeedback: null,
   wrongCount: 0,
   hintCount: 0,
   nextRoomAt: null,
@@ -120,7 +129,15 @@ export function normalizeGame(g: GameState): GameState {
   g.nextRoomAt ??= null;
   g.finishedAt ??= null;
   g.place ??= null;
+  const normalizeProgress = (p: Progress) => {
+    p.correctCount ??= Object.keys(p.solved).length;
+    p.streak ??= 0;
+    p.bestStreak ??= 0;
+    p.lastAnswerFeedback ??= null;
+  };
+  normalizeProgress(g);
   g.players.forEach((p) => {
+    if (p.progress) normalizeProgress(p.progress);
     p.kind ??= "human";
     p.avatar ??= defaultAvatar();
   });
@@ -248,6 +265,7 @@ function clearWorking(g: GameState, p: Progress) {
 function timeout(g: GameState, p: Progress, at: number) {
   const rules = GAME_RULES[g.gameDifficulty];
   clearWorking(g, p);
+  p.streak = 0;
   if (p.phase === "detention") {
     p.phase = "lost";
     p.deadline = null;
@@ -308,10 +326,20 @@ function solve(
 ) {
   if (p.solved[puzzle.id]) return;
   const rules = GAME_RULES[g.gameDifficulty];
-  if (
-    Math.abs(value - puzzle.answer) <=
-    1e-7 * Math.max(1, Math.abs(puzzle.answer))
-  ) {
+  const correct = Math.abs(value - puzzle.answer) <=
+    1e-7 * Math.max(1, Math.abs(puzzle.answer));
+  p.lastAnswerFeedback = {
+    id: `${g.run}:${player.id}:${p.correctCount + p.wrongCount + 1}`,
+    puzzleId: puzzle.id,
+    playerId: player.id,
+    correct,
+    main: p.phase === "main",
+    at,
+  };
+  if (correct) {
+    p.correctCount++;
+    p.streak++;
+    p.bestStreak = Math.max(p.bestStreak, p.streak);
     p.solved[puzzle.id] = player.id;
     p.deadline! += 20000;
     if (p.phase === "main") p.score += 100;
@@ -357,6 +385,7 @@ function solve(
     }
   } else {
     p.wrongCount++;
+    p.streak = 0;
     p.deadline! -= rules.wrong * 1000;
     event(
       p,
@@ -800,6 +829,10 @@ export function snapshot(
             locked: !!q.requires?.some((id) => !p.solved[id]),
           })),
     solvedCount: locks(p),
+    correctCount: p.correctCount,
+    streak: p.streak,
+    bestStreak: p.bestStreak,
+    lastAnswer: p.lastAnswerFeedback,
     wrongCount: p.wrongCount,
     hintCount: p.hintCount,
     events: (p === g ? g.events : [...g.events, ...p.events])

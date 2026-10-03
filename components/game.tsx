@@ -21,6 +21,8 @@ import {
   MessageSquare,
   TriangleAlert,
   CheckCheck,
+  LockOpen,
+  Flame,
 } from "lucide-react";
 import { RoomSettings } from "./room-settings";
 import { GAME_RULES } from "@/lib/game-settings";
@@ -81,6 +83,8 @@ export function Game({
   const [selected, setSelected] = useState(""),
     [drafts, setDrafts] = useState<Record<string, string>>({}),
     [chat, setChat] = useState("");
+  const [openingLock, setOpeningLock] = useState("");
+  const lastFeedback = useRef(g.lastAnswer?.id);
   const sound = preferences.sound;
   const setSound = (sound: boolean) => updatePreferences({ sound });
   const audio = useRef<AudioContext | null>(null);
@@ -102,6 +106,14 @@ export function Game({
   useEffect(() => {
     setSelected("");
   }, [stateKey]);
+  useEffect(() => {
+    if (!g.lastAnswer || lastFeedback.current === g.lastAnswer.id) return;
+    lastFeedback.current = g.lastAnswer.id;
+    if (!g.lastAnswer.correct) return;
+    setOpeningLock(g.lastAnswer.puzzleId);
+    const timer = setTimeout(() => setOpeningLock(""), 900);
+    return () => clearTimeout(timer);
+  }, [g.lastAnswer?.id]);
   useEffect(() => {
     const newEvents = g.events.filter((e) => !seen.current.has(e.id));
     if (seen.current.size && newEvents.length) {
@@ -243,6 +255,21 @@ export function Game({
       )}
       <div className="play-layout">
         <section className="main-board">
+          {g.phase !== "lobby" && (
+            <div className="solve-feedback-area">
+              <span className={`streak-badge ${g.streak >= 3 ? "on-fire" : ""}`}>
+                <Flame size={18} aria-hidden="true" />
+                {race ? "Your" : "Team"} streak: {g.streak}
+                <small>{g.bestStreak >= 5 ? "Lab legend" : g.bestStreak >= 3 ? "Sharp mind" : `Best ${g.bestStreak}`}</small>
+              </span>
+              {g.lastAnswer && now - g.lastAnswer.at < 8000 && (
+                <p key={g.lastAnswer.id} className={`answer-feedback ${g.lastAnswer.correct ? "correct" : "incorrect"}`} role="status">
+                  {g.lastAnswer.correct ? <LockOpen size={20} aria-hidden="true" /> : <TriangleAlert size={20} aria-hidden="true" />}
+                  <span>{g.lastAnswer.correct ? `Lock opened! +20 seconds${g.lastAnswer.main ? " · +100 points" : ""}` : `Incorrect · −${rules.wrong} seconds. Try again.`}</span>
+                </p>
+              )}
+            </div>
+          )}
           {g.phase === "lobby" ? (
             <>
               <div className="eyebrow">EXPERIMENT 001 / WAITING ROOM</div>
@@ -567,14 +594,14 @@ export function Game({
                   return (
                     <button
                       key={p.id}
-                      className={`lock-card ${p.solved ? "solved" : ""} ${p.id === puzzle?.id ? "active" : ""}`}
+                      className={`lock-card ${p.solved ? "solved" : ""} ${p.id === puzzle?.id ? "active" : ""} ${p.id === openingLock ? "lock-opening" : ""}`}
                       onClick={() => choose(p.id)}
                       disabled={p.locked || !!busy}
                     >
                       <span className="lock-number">
                         LOCK {String(i + 1).padStart(2, "0")}
                         {p.solved ? (
-                          <Check size={16} />
+                          <LockOpen size={16} className="lock-symbol" />
                         ) : (
                           <LockKeyhole size={16} />
                         )}
@@ -615,9 +642,7 @@ export function Game({
                   ) : (
                     <>
                       <form className="answer-form" onSubmit={submit}>
-                        <label className="sr-only" htmlFor="answer">
-                          Your answer
-                        </label>
+                        <label className="answer-label" htmlFor="answer">Your answer</label>
                         <input
                           id="answer"
                           value={drafts[inputKey] ?? ""}
@@ -629,6 +654,7 @@ export function Game({
                           }
                           placeholder="Enter your answer"
                           autoComplete="off"
+                          enterKeyHint="go"
                           maxLength={40}
                           required
                           disabled={

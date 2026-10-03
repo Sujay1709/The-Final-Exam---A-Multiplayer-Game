@@ -202,3 +202,7 @@ The final branch contains the complete preview. Merge the dependencies in order 
 **Interview explanation:** I reused one rules engine for shared and private progress, separated question level from time pressure/opponent skill, and processed seeded bot actions in logical server time. Versioned database writes and replay receipts prevent duplicate awards; viewer-specific snapshots protect opponents’ explanations.
 
 **Recruiter explanation:** Friends join by code on their phones, customize characters, and escape a professor’s lab by solving math. Small groups can compete against clearly labelled computer opponents.
+
+### Solve feedback and cosmetic streaks
+
+Correct answers show lock-opening feedback and a streak badge. Three consecutive correct answers earn **Sharp mind**; five earn **Lab legend**. These are cosmetic: +100 points per main lock and +20 seconds per correct answer remain unchanged. A wrong answer or missed deadline breaks the current streak. Co-op shares a team streak; Race keeps each streak private. Mobile answer controls stay visible while scrolling within the question panel. System/browser reduced motion and the player's motion setting disable the lock animation.
