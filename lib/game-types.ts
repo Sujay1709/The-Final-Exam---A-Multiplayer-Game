@@ -23,6 +23,14 @@ export interface PuzzleView {
   solution: string | null;
   locked: boolean;
 }
+export interface AnswerFeedback {
+  id: string;
+  puzzleId: string;
+  playerId: string;
+  correct: boolean;
+  main: boolean;
+  at: number;
+}
 export interface GameEvent {
   id: string;
   text: string;
@@ -66,6 +74,10 @@ export interface Snapshot extends GameSettings {
   run: number;
   puzzles: PuzzleView[];
   solvedCount: number;
+  correctCount: number;
+  streak: number;
+  bestStreak: number;
+  lastAnswer: AnswerFeedback | null;
   wrongCount: number;
   hintCount: number;
   events: GameEvent[];
