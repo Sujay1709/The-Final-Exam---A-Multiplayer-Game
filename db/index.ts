@@ -1,13 +1,23 @@
-import { env } from "cloudflare:workers";
-import { drizzle } from "drizzle-orm/d1";
-import * as schema from "./schema";
+import "server-only";
+import { databaseConfig } from "./config";
+import type { RoomStore } from "./sql-store";
 
-export function getDb() {
-  if (!env.DB) {
-    throw new Error(
-      "Cloudflare D1 binding `DB` is unavailable. Set the `d1` field in .openai/hosting.json to `DB` or let your control plane inject the real binding values before using the database."
-    );
+let pendingStore: Promise<RoomStore> | undefined;
+
+export function getRoomStore(): Promise<RoomStore> {
+  pendingStore ??= openStore().catch((error) => {
+    pendingStore = undefined;
+    throw error;
+  });
+  return pendingStore;
+}
+
+async function openStore(): Promise<RoomStore> {
+  const config = databaseConfig(process.env, process.cwd());
+  if (config.kind === "remote") {
+    const { remoteRoomStore } = await import("./remote");
+    return remoteRoomStore(config.url, config.authToken);
   }
-
-  return drizzle(env.DB, { schema });
+  const { openLocalRoomStore } = await import("./local");
+  return openLocalRoomStore(config.file).store;
 }

@@ -46,3 +46,7 @@ next-env.d.ts
 /work/
 
 *.tsbuildinfo
+
+# Local room data; hosted games use a remote database.
+/.data/
+!.env.example

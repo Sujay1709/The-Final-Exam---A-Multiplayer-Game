@@ -1,6 +1,6 @@
 import { validateSettings, NEW_ROOM_SETTINGS } from "@/lib/game-settings";
 import { validateAvatar } from "@/lib/profiles";
-import { env } from "cloudflare:workers";
+import { getRoomStore } from "@/db";
 import {
   createGame,
   normalizeGame,
@@ -12,6 +12,7 @@ import {
   type Action,
 } from "@/lib/game";
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 const json = (body: unknown, status = 200) =>
   Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
 function nameOf(value: unknown): string {
@@ -22,10 +23,6 @@ function nameOf(value: unknown): string {
   )
     throw new GameError("Choose a name with 1–20 characters.");
   return value.trim().replace(/\s+/g, " ");
-}
-function db(): D1Database {
-  if (!env.DB) throw new Error("Game database is not configured.");
-  return env.DB;
 }
 export async function POST(request: Request) {
   try {
@@ -45,7 +42,7 @@ export async function POST(request: Request) {
     } catch (e) {
       throw new GameError((e as Error).message);
     }
-    const database = db();
+    const database = await getRoomStore();
     if (a.op === "create") {
       const name = nameOf(a.name);
       a.difficulty ??= "junior";
@@ -83,17 +80,13 @@ export async function POST(request: Request) {
           avatar,
           settings,
         );
-        const saved = await database
-          .prepare(
-            "INSERT OR IGNORE INTO rooms (code,state,version,created_at) VALUES (?,?,0,?)",
-          )
-          .bind(code, JSON.stringify(game), now)
-          .run();
-        if (saved.meta.changes) {
-          await database
-            .prepare("DELETE FROM rooms WHERE created_at < ?")
-            .bind(now - 86400000)
-            .run();
+        const saved = await database.createRoom(
+          code,
+          JSON.stringify(game),
+          now,
+        );
+        if (saved) {
+          await database.deleteExpired(now - 86400000);
           return json({
             session: { code, token, playerId },
             game: snapshot(game, 0, now, playerId),
@@ -119,10 +112,7 @@ export async function POST(request: Request) {
       joinId = crypto.randomUUID();
     // Compare-and-swap makes each update atomic: concurrent players retry against the latest state.
     for (let attempt = 0; attempt < 12; attempt++) {
-      const row = await database
-        .prepare("SELECT state,version,created_at FROM rooms WHERE code = ?")
-        .bind(a.code)
-        .first<{ state: string; version: number; created_at: number }>();
+      const row = await database.readRoom(a.code);
       if (!row || Date.now() - row.created_at > 86400000)
         throw new GameError(
           "Room not found or expired. Check the code with your host.",
@@ -142,13 +132,12 @@ export async function POST(request: Request) {
       }
       if (error?.status === 401 || (a.op === "join" && error))
         return json({ error: error.message }, error.status);
-      const saved = await database
-        .prepare(
-          "UPDATE rooms SET state = ?, version = version + 1 WHERE code = ? AND version = ?",
-        )
-        .bind(JSON.stringify(game), a.code, row.version)
-        .run();
-      if (!saved.meta.changes) continue;
+      const saved = await database.updateRoom(
+        a.code,
+        JSON.stringify(game),
+        row.version,
+      );
+      if (!saved) continue;
       const viewerId =
         a.op === "join"
           ? joinId

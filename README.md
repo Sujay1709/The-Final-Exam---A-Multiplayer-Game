@@ -106,23 +106,32 @@ The unopened letter reveals a printing error. His friends tried to correct the m
 
 Project location: `/Users/sujaygopal/Desktop/MyProjects/The-Final-Exam---A-Multiplayer-Game`.
 
-Requires **Node.js 22.13+** and npm. The app uses React, TypeScript, Vinext, Three.js, Cloudflare Workers, and D1/SQLite. The existing JSON room storage holds settings and private race progress; no new SQL table is required.
+Requires **Node.js 24.x** and npm. The deployment target is now native Next.js, React, TypeScript, and Three.js. Local games use SQLite; Vercel games use a remote Turso/libSQL database. Settings and private race progress retain the existing JSON schema.
 
 ```sh
-git clone https://github.com/Sujay1709/The-Final-Exam---A-Multiplayer-Game.git
-cd The-Final-Exam---A-Multiplayer-Game
-# Complete implementation while these feature PRs remain open:
-git switch codex/race-bots
+cd "/Users/sujaygopal/Desktop/MyProjects/The-Final-Exam---A-Multiplayer-Game"
+nvm use 24
+# Complete game plus Vercel compatibility while PRs remain open:
+git switch codex/vercel-compat
 npm run install:ci
-npm run build
-# Run once for a NEW database only:
-node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_spotty_toad_men.sql
 npm run dev
 ```
 
-The moved project retains its existing database; do not rerun its applied migration. The dev server listens on `0.0.0.0:5173`. Local access: `http://localhost:5173`. Phones on the same network use `http://YOUR_COMPUTER_LAN_IP:5173`. Keep the computer awake and the server running. LAN IPs can change. A phone’s localhost points at the phone itself. Development mode uses the starter’s mocked sign-in and is not a public deployment.
+No local database migration command is needed. The server automatically reuses the preserved `.wrangler/state/v3/d1/miniflare-D1DatabaseObject` SQLite file, or creates `.data/rooms.sqlite` in a clean clone. If several legacy files exist, choose one with `GAME_SQLITE_PATH`. The local adapter uses `CREATE TABLE IF NOT EXISTS`; it does not reset existing rooms.
+
+The dev server listens on `0.0.0.0:5173`. Local access: `http://localhost:5173`. Phones on the same network use `http://YOUR_COMPUTER_LAN_IP:5173`. Keep the computer awake and the server running. LAN IPs can change. A phone’s localhost points at the phone itself.
 
 Browser storage holds the device’s profile/preferences and current session credential. Do not share the credential. Rooms expire after 24 hours. New humans join only in the lobby; existing sessions reconnect on their original browser. Two tabs in one browser normally share identity—use another device, browser, or private window for another human.
+
+## Deploy on Vercel
+
+See [the deployment guide](docs/vercel-deployment.md) for database setup and project settings. Deploy `codex/vercel-compat` while the feature PRs remain open. GitHub `main` is unchanged.
+
+The prior `npm run build` invoked Vinext and wrote Cloudflare output under `dist/`; Vercel's Next.js preset expected `.next/routes-manifest.json`. The build now runs `next build`, and `vercel.json` pins the framework, install command, build command, and `.next` output. Do not restore the Vinext build command or choose `dist` as Vercel's output directory.
+
+Set **both** `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` as server-only Vercel environment variables. Initialize the remote database once with `drizzle/0000_spotty_toad_men.sql`, then redeploy. Builds do not need database credentials; multiplayer requests do. Hosted requests fail with 503 when the database is unconfigured rather than writing separate ephemeral files on different server instances.
+
+The former Vinext/Sites tooling remains in the repository for historical reference; the standard npm commands and game API now target Next.js/Node on Vercel. Returning to Sites requires its original runtime adapter. The previous `codex/race-bots` branch remains available as the Cloudflare version.
 
 ## Verify
 
@@ -130,13 +139,14 @@ Browser storage holds the device’s profile/preferences and current session cre
 npm test
 npm run typecheck
 npm run build
+node scripts/check-vercel-build.mjs
 # With the local preview running:
 node tests/integration.mjs
 node tests/profiles-http.mjs
 node tests/race-http.mjs
 ```
 
-Controlled-clock tests cover original Co-op rules, pressure settings, isolated detention, automatic progression, deadline catch-up, first escape/final ordering, host migration, bot scheduling independent of polling, reconnects, legacy state, and all 3200 avatar combinations. HTTP tests cover eight humans, two humans plus six bots, replacement/capacity, concurrent submissions, idempotency, settings/profile permissions, alias validation, and private snapshots. GitHub CI builds and runs rules plus HTTP tests on a disposable local database for the final feature PR.
+Controlled-clock tests cover original Co-op rules, pressure settings, isolated detention, automatic progression, deadline catch-up, first escape/final ordering, host migration, bot scheduling independent of polling, reconnects, legacy state, and all 3200 avatar combinations. HTTP tests cover eight humans, two humans plus six bots, replacement/capacity, concurrent submissions, idempotency, settings/profile permissions, alias validation, and private snapshots. Storage tests also cover preserved local data, remote credential validation, the real SDK against a local Hrana HTTP fixture, collision handling, expiry, and versioned concurrent writes. GitHub CI checks the native Next.js manifests and runs HTTP tests against the production server with a disposable local database.
 
 For manual UI checks: try 375/390px phone widths and desktop; customize then reload; change profile in the lobby; toggle sound/motion during play; use pointer/touch and keyboard movement/reset controls; switch between portrait/sculpt; test a device without WebGL. Complete the cinematic and verify reload replays it. Real physical phone touch and classroom playtesting remain useful beyond browser viewport checks.
 
@@ -145,7 +155,8 @@ For manual UI checks: try 375/390px phone widths and desktop; customize then rel
 - `lib/game.ts`: shared rule functions operate on either one cooperative progress record or a private record per racer; bots use the same validator.
 - `lib/game-settings.ts`: pressure/skill tables and validated room settings.
 - `lib/game-types.ts`: public contracts; `lib/puzzles.ts`: server-only authored question/answer bank.
-- `app/api/game/route.ts`: session authentication, room creation/joining, viewer-specific snapshots, and versioned D1 updates.
+- `app/api/game/route.ts`: session authentication, room creation/joining, viewer-specific snapshots, and versioned SQL updates.
+- `db/index.ts`, `db/config.ts`, `db/sql-store.ts`, `db/local.ts`, `db/remote.ts`: server-only storage selection and the shared parameterized SQL/CAS contract.
 - `lib/use-game.ts`: polling every 1.2 seconds, reconnects, and server-clock synchronization.
 - `lib/profiles.ts`, `components/avatar.tsx`, `components/profile-editor.tsx`: validated cosmetic catalog and original SVG art.
 - `lib/use-preferences.ts`: browser preference persistence; `components/room-settings.tsx`: lobby controls.
@@ -160,14 +171,14 @@ For manual UI checks: try 375/390px phone widths and desktop; customize then rel
 
 ## Debugging and limitations
 
-- Database unavailable: inspect the server log, check the `DB` binding, and initialize a new local database once.
+- Database unavailable: inspect the server log; on Vercel check both Turso variables and the initialized `rooms` table. For local play leave the remote variables unset. See the deployment guide.
 - Cannot start: at least two connected humans must ready up; only the human host starts. Bots cannot satisfy the human minimum.
 - Phone cannot connect: use the computer’s LAN IP, same network, awake host, and allow port 5173 through the firewall/router.
 - Stale-phase error: review the new room before resubmitting; the prior answer was not accepted into a different room.
 - Silent audio: press Start story or a sound button; browsers require a gesture. Check the mute preference.
 - No 3D: use the preserved portrait; WebGL may be unavailable. Clear hot-reload hook errors by refreshing.
 
-The fixed bank contains 30 main puzzles and six detention steps. Replays repeat questions. Bots simulate skill; they do not learn. Tests validate room-level correctness, not large-scale load. There are no app accounts, global leaderboard, random question generation, or ML inference. Public deployment needs abuse protection and classroom testing. GitHub source upload is separate from publishing; this delivery leaves main and hosted publishing unchanged.
+The fixed bank contains 30 main puzzles and six detention steps. Replays repeat questions. Bots simulate skill; they do not learn. Tests validate room-level correctness, not large-scale load. There are no app accounts, global leaderboard, random question generation, or ML inference. Public deployment still benefits from abuse protection and classroom testing. The remote database adapter is tested locally through its SQL contract; live cloud credentials and a Vercel deployment are required to verify the hosted environment. GitHub source upload is separate from publishing; this delivery leaves main and hosted publishing unchanged.
 
 ## Feature PRs and future updates
 
@@ -178,6 +189,7 @@ The current delivery is stacked and remains open for review:
 | `codex/ui-orange-3d` | `main` | Orange UI, cinematic, preserved interactive manga, optional 3D |
 | `codex/player-profiles` | `codex/ui-orange-3d` | Original avatars, aliases, persistent settings, profile authorization |
 | `codex/race-bots` | `codex/player-profiles` | Race, pressure/skill settings, deterministic bots, private progress |
+| `codex/vercel-compat` | `codex/race-bots` | Native Next.js output, portable SQL storage, Vercel configuration and checks |
 
 The final branch contains the complete preview. Merge the dependencies in order when approved, then retarget dependent PRs as needed. Existing baseline feature branches and Git history are retained. Branches isolate change history; they do not prohibit changes to shared files. Keep future changes focused, test them, and open a PR. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
