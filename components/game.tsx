@@ -26,7 +26,9 @@ import {
 } from "lucide-react";
 import { RoomSettings } from "./room-settings";
 import { SeriesScoreboard } from "./series-scoreboard";
-import { GAME_RULES } from "@/lib/game-settings";
+import { LabEntry } from "./lab-entry";
+import { EscapeLab } from "./escape-lab";
+import { GAME_RULES, minimumHumans } from "@/lib/game-settings";
 import { Avatar } from "./avatar";
 import type { Preferences } from "@/lib/use-preferences";
 import { Progress } from "@/components/ui/progress";
@@ -98,15 +100,25 @@ export function Game({
     ended = g.phase === "won" || g.phase === "lost";
   const room = ROOM_INFO[g.roomIndex],
     detention = g.phase === "detention";
-  const puzzle =
-    g.puzzles.find((p) => p.id === selected) ??
-    g.puzzles.find((p) => !p.solved && !p.locked) ??
-    g.puzzles[0];
+  const puzzle = g.puzzles.find((p) => p.id === selected);
+  const cluePanel = useRef<HTMLElement>(null);
   const stateKey = `${g.run}:${g.phase}:${g.roomIndex}:${g.punishment}`;
   const inputKey = `${stateKey}:${puzzle?.id}`;
   useEffect(() => {
-    setSelected("");
+    setSelected(me?.working ?? "");
   }, [stateKey]);
+  useEffect(() => {
+    if (!selected) return;
+    cluePanel.current?.focus({ preventScroll: true });
+    cluePanel.current?.scrollIntoView({
+      block: "nearest",
+      behavior:
+        preferences.reducedMotion ||
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "auto"
+          : "smooth",
+    });
+  }, [selected]);
   useEffect(() => {
     if (!g.lastAnswer || lastFeedback.current === g.lastAnswer.id) return;
     lastFeedback.current = g.lastAnswer.id;
@@ -175,9 +187,10 @@ export function Game({
     await audio.current.resume();
     setSound(!sound);
   }
-  function choose(id: string) {
-    setSelected(id);
-    if (inPlay) void action("claim", { puzzleId: id });
+  async function choose(id: string) {
+    if (!inPlay || !connected) return;
+    const next = await action("claim", { puzzleId: id });
+    if (next) setSelected(id);
   }
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -260,9 +273,11 @@ export function Game({
           expanded={ended || g.phase === "lobby"}
         />
       )}
-      <div className="play-layout">
+      <div
+        className={`play-layout ${g.phase === "loading" ? "is-loading" : ""}`}
+      >
         <section className="main-board">
-          {g.phase !== "lobby" && (
+          {g.phase !== "lobby" && g.phase !== "loading" && (
             <div className="solve-feedback-area">
               <span
                 className={`streak-badge ${g.streak >= 3 ? "on-fire" : ""}`}
@@ -337,7 +352,10 @@ export function Game({
               <div className="lobby-info">
                 <span>
                   <Users size={17} />
-                  {g.players.length}/8 players joined
+                  {humanPlayers.length} human
+                  {humanPlayers.length !== 1 ? "s" : ""} ·{" "}
+                  {g.players.filter((p) => p.kind === "bot").length} bots ·{" "}
+                  {g.players.length}/8 seats
                 </span>
                 <span>
                   <CheckCheck size={17} />
@@ -357,28 +375,17 @@ export function Game({
                   )}{" "}
                   {me?.ready ? "Ready · click to undo" : "I'm ready"}
                 </button>
-                {host ? (
-                  <button
-                    className="primary-button"
-                    disabled={
-                      !!busy ||
-                      !connected ||
-                      readyCount !== humanPlayers.length ||
-                      humanPlayers.length < 2
-                    }
-                    onClick={() => void action("start")}
-                  >
-                    <KeyRound size={17} />
-                    Start the experiment
-                  </button>
-                ) : (
-                  <span className="muted">Waiting for the host to start.</span>
-                )}
+                <span className="lobby-auto-start">
+                  <Clock3 size={18} aria-hidden="true" />
+                  10-second countdown starts when everyone is ready.
+                </span>
               </div>
               <p className="help-text">
-                {humanPlayers.length < 2
-                  ? "At least two players are needed. Share the code with a friend."
-                  : "Everyone must be connected and ready. The host plays too."}
+                {humanPlayers.length < minimumHumans(g)
+                  ? "At least two humans are needed. Invite a friend or enable bots in Race."
+                  : race && g.fillBots && humanPlayers.length === 1
+                    ? "You can race against seven bots. Invite friends before marking yourself ready."
+                    : "Every human must be connected and ready. No host start is needed."}
               </p>
               <p className="help-text">
                 Change your alias and character in Player settings before the
@@ -412,6 +419,8 @@ export function Game({
                 </div>
               </div>
             </>
+          ) : g.phase === "loading" ? (
+            <LabEntry entryAt={g.entryAt} now={now} connected={connected} />
           ) : ended ? (
             <>
               <div className="eyebrow">
@@ -768,50 +777,58 @@ export function Game({
                   </p>
                 </div>
               </div>
-              <div className="lock-grid">
-                {g.puzzles.map((p, i) => {
-                  const workers = g.players.filter(
-                    (x) => x.working === p.id && now - x.lastSeen < 30000,
-                  );
-                  return (
-                    <button
-                      key={p.id}
-                      className={`lock-card ${p.solved ? "solved" : ""} ${p.id === puzzle?.id ? "active" : ""} ${p.id === openingLock ? "lock-opening" : ""}`}
-                      onClick={() => choose(p.id)}
-                      disabled={p.locked || !!busy}
-                    >
-                      <span className="lock-number">
-                        LOCK {String(i + 1).padStart(2, "0")}
-                        {p.solved ? (
-                          <LockOpen size={16} className="lock-symbol" />
-                        ) : (
-                          <LockKeyhole size={16} />
-                        )}
-                      </span>
-                      <strong>{p.title}</strong>
-                      <small>
-                        {p.solved
-                          ? `Solved by ${g.players.find((x) => x.id === p.solvedBy)?.name ?? "a teammate"}`
-                          : p.locked
-                            ? "Solve both fragments first"
-                            : workers.length
-                              ? `${workers.map((x) => x.name).join(", ")} working`
-                              : p.topic}
-                      </small>
-                    </button>
-                  );
-                })}
-              </div>
+              <EscapeLab
+                puzzles={g.puzzles}
+                discovered={g.discovered}
+                activity={Object.fromEntries(
+                  g.puzzles.map((p) => [
+                    p.id,
+                    p.solved
+                      ? `Opened by ${g.players.find((x) => x.id === p.solvedBy)?.name ?? "a teammate"}`
+                      : !race
+                        ? g.players
+                            .filter(
+                              (x) =>
+                                x.working === p.id && now - x.lastSeen < 30000,
+                            )
+                            .map((x) => x.name)
+                            .join(", ")
+                        : "",
+                  ]),
+                )}
+                openingLock={openingLock}
+                selected={selected}
+                detention={detention}
+                roomIndex={g.roomIndex}
+                disabled={!!busy || !connected || seconds === 0}
+                choose={choose}
+              />
               {puzzle && (
-                <article className="puzzle-panel">
+                <article
+                  className={`puzzle-panel ${puzzle.id === openingLock ? "lock-opening" : ""}`}
+                  ref={cluePanel}
+                  tabIndex={-1}
+                  aria-labelledby="clue-title"
+                >
                   <div className="puzzle-label">
                     <span className="micro">{puzzle.topic.toUpperCase()}</span>
                     <span>
                       {g.puzzles.filter((p) => p.solved).length}/
                       {g.puzzles.length} locks open
                     </span>
+                    <button
+                      className="text-button"
+                      onClick={() => {
+                        setSelected("");
+                        document
+                          .getElementById(`lab-object-${selected}`)
+                          ?.focus();
+                      }}
+                    >
+                      Back to the lab
+                    </button>
                   </div>
-                  <h3>{puzzle.title}</h3>
+                  <h3 id="clue-title">{puzzle.title}</h3>
                   <p className="question">{puzzle.prompt}</p>
                   {puzzle.solved ? (
                     <div className="solved-answer">
@@ -907,218 +924,224 @@ export function Game({
             </>
           )}
         </section>
-        <aside className="team-sidebar">
-          {race && g.phase !== "lobby" && (
-            <div className="leaderboard">
-              <h3>
-                {g.matchComplete ? "Final race results" : "Live race standings"}
-              </h3>
-              <p className="help-text">First successful escape wins.</p>
-              <ol>
-                {g.leaderboard.map((p, i) => {
-                  const player = g.players.find((x) => x.id === p.playerId);
-                  return (
-                    <li
-                      key={p.playerId}
-                      className={p.playerId === session.playerId ? "you" : ""}
-                    >
-                      <span>
-                        {p.place ??
-                          (p.phase === "lost" || p.phase === "left"
-                            ? "—"
-                            : i + 1)}
-                      </span>
-                      <div>
-                        <strong>
-                          {player?.name}
-                          {player?.kind === "bot" && (
-                            <small className="bot-badge">BOT</small>
-                          )}
-                        </strong>
-                        <small>
-                          {p.phase === "won"
-                            ? "Escaped"
-                            : p.phase === "lost"
-                              ? "Did not escape"
-                              : p.phase === "left"
-                                ? "Left race"
-                                : p.phase === "detention"
-                                  ? `Detention ${p.punishment}`
-                                  : `Room ${p.roomIndex + 1}`}{" "}
-                          · {p.solvedCount}/15 locks · {p.score} pts
-                        </small>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ol>
-            </div>
-          )}
+        {g.phase !== "loading" && (
+          <aside className="team-sidebar">
+            {race && g.phase !== "lobby" && (
+              <div className="leaderboard">
+                <h3>
+                  {g.matchComplete
+                    ? "Final race results"
+                    : "Live race standings"}
+                </h3>
+                <p className="help-text">First successful escape wins.</p>
+                <ol>
+                  {g.leaderboard.map((p, i) => {
+                    const player = g.players.find((x) => x.id === p.playerId);
+                    return (
+                      <li
+                        key={p.playerId}
+                        className={p.playerId === session.playerId ? "you" : ""}
+                      >
+                        <span>
+                          {p.place ??
+                            (p.phase === "lost" || p.phase === "left"
+                              ? "—"
+                              : i + 1)}
+                        </span>
+                        <div>
+                          <strong>
+                            {player?.name}
+                            {player?.kind === "bot" && (
+                              <small className="bot-badge">BOT</small>
+                            )}
+                          </strong>
+                          <small>
+                            {p.phase === "won"
+                              ? "Escaped"
+                              : p.phase === "lost"
+                                ? "Did not escape"
+                                : p.phase === "left"
+                                  ? "Left race"
+                                  : p.phase === "detention"
+                                    ? `Detention ${p.punishment}`
+                                    : `Room ${p.roomIndex + 1}`}{" "}
+                            · {p.solvedCount}/15 locks · {p.score} pts
+                          </small>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ol>
+              </div>
+            )}
 
-          <div className="score-panel">
-            <span className="micro">{race ? "YOUR SCORE" : "TEAM SCORE"}</span>
-            <strong>
-              {g.score.toLocaleString()}
-              <small>PTS</small>
-            </strong>
-          </div>
-          <div className="punishment-panel">
-            <div className="sidebar-heading">
-              <ShieldAlert size={17} />
-              <h3>Punishment meter</h3>
-              <span>{Math.min(g.punishment, 4)}/4</span>
+            <div className="score-panel">
+              <span className="micro">
+                {race ? "YOUR SCORE" : "TEAM SCORE"}
+              </span>
+              <strong>
+                {g.score.toLocaleString()}
+                <small>PTS</small>
+              </strong>
             </div>
-            <div
-              className="punishment-bars"
-              aria-label={`Punishment level ${g.punishment} of 4`}
-            >
-              {[1, 2, 3, 4].map((n) => (
-                <span key={n} className={g.punishment >= n ? "filled" : ""} />
-              ))}
+            <div className="punishment-panel">
+              <div className="sidebar-heading">
+                <ShieldAlert size={17} />
+                <h3>Punishment meter</h3>
+                <span>{Math.min(g.punishment, 4)}/4</span>
+              </div>
+              <div
+                className="punishment-bars"
+                aria-label={`Punishment level ${g.punishment} of 4`}
+              >
+                {[1, 2, 3, 4].map((n) => (
+                  <span key={n} className={g.punishment >= n ? "filled" : ""} />
+                ))}
+              </div>
+              <p>
+                {g.punishment >= 4
+                  ? "Experiment terminated"
+                  : PUNISHMENT_NAMES[g.punishment]}
+              </p>
+              <small>
+                {g.punishment === 0
+                  ? "A missed deadline adds a detention room."
+                  : g.punishment < 4
+                    ? "Solved locks are safe. Detention is getting tougher."
+                    : "Four deadlines missed."}
+              </small>
             </div>
-            <p>
-              {g.punishment >= 4
-                ? "Experiment terminated"
-                : PUNISHMENT_NAMES[g.punishment]}
-            </p>
-            <small>
-              {g.punishment === 0
-                ? "A missed deadline adds a detention room."
-                : g.punishment < 4
-                  ? "Solved locks are safe. Detention is getting tougher."
-                  : "Four deadlines missed."}
-            </small>
-          </div>
-          <div className="team-panel">
-            <div className="sidebar-heading">
-              <Users size={17} />
-              <h3>{race ? "Racers" : "Your team"}</h3>
-              <span>{g.players.length}/8</span>
-            </div>
-            <div className="player-list">
-              {g.players.map((p, i) => (
-                <div className="player-row" key={p.id}>
-                  <Avatar
-                    profile={p.avatar}
-                    label={p.name}
-                    className="roster-avatar"
-                  />
-                  <div>
-                    <strong>
-                      {p.name}
-                      {p.kind === "bot" && (
-                        <small className="bot-badge">BOT</small>
-                      )}
-                      {p.id === session.playerId && <small> (you)</small>}
-                    </strong>
-                    <span>
-                      {p.id === g.hostId ? "Host · " : ""}
-                      {p.left
-                        ? "Left race"
-                        : now - p.lastSeen > 30000
-                          ? "Disconnected"
-                          : g.phase === "lobby"
-                            ? p.ready
-                              ? "Ready"
-                              : "Not ready"
-                            : p.working
-                              ? "Solving a lock"
-                              : "In the laboratory"}
-                    </span>
+            <div className="team-panel">
+              <div className="sidebar-heading">
+                <Users size={17} />
+                <h3>{race ? "Racers" : "Your team"}</h3>
+                <span>{g.players.length}/8</span>
+              </div>
+              <div className="player-list">
+                {g.players.map((p, i) => (
+                  <div className="player-row" key={p.id}>
+                    <Avatar
+                      profile={p.avatar}
+                      label={p.name}
+                      className="roster-avatar"
+                    />
+                    <div>
+                      <strong>
+                        {p.name}
+                        {p.kind === "bot" && (
+                          <small className="bot-badge">BOT</small>
+                        )}
+                        {p.id === session.playerId && <small> (you)</small>}
+                      </strong>
+                      <span>
+                        {p.id === g.hostId ? "Host · " : ""}
+                        {p.left
+                          ? "Left race"
+                          : now - p.lastSeen > 30000
+                            ? "Disconnected"
+                            : g.phase === "lobby"
+                              ? p.ready
+                                ? "Ready"
+                                : "Not ready"
+                              : p.working
+                                ? "Solving a lock"
+                                : "In the laboratory"}
+                      </span>
+                    </div>
+                    {now - p.lastSeen < 30000 &&
+                      (g.phase !== "lobby" || p.ready) && <Check size={15} />}
                   </div>
-                  {now - p.lastSeen < 30000 &&
-                    (g.phase !== "lobby" || p.ready) && <Check size={15} />}
+                ))}
+              </div>
+            </div>
+            {!!g.review.length && (
+              <details className="race-review">
+                <summary>Your solved questions</summary>
+                {g.review.map((q) => (
+                  <article key={q.id}>
+                    <span className="micro">{q.room}</span>
+                    <h4>{q.title}</h4>
+                    <p>{q.prompt}</p>
+                    <strong>{q.solution}</strong>
+                  </article>
+                ))}
+              </details>
+            )}
+            <div className="room-track">
+              <span className="micro">ESCAPE ROUTE</span>
+              {ROOM_INFO.map((r, i) => (
+                <div
+                  key={r.title}
+                  className={`route-stop ${i < g.roomIndex || g.phase === "won" || (i === g.roomIndex && g.phase === "cleared") ? "done" : i === g.roomIndex && g.phase !== "lobby" ? "current" : ""}`}
+                >
+                  <span>
+                    {i < g.roomIndex ||
+                    g.phase === "won" ||
+                    (i === g.roomIndex && g.phase === "cleared") ? (
+                      <Check size={12} />
+                    ) : (
+                      String(i + 1).padStart(2, "0")
+                    )}
+                  </span>
+                  <p>{r.title}</p>
                 </div>
               ))}
             </div>
-          </div>
-          {!!g.review.length && (
-            <details className="race-review">
-              <summary>Your solved questions</summary>
-              {g.review.map((q) => (
-                <article key={q.id}>
-                  <span className="micro">{q.room}</span>
-                  <h4>{q.title}</h4>
-                  <p>{q.prompt}</p>
-                  <strong>{q.solution}</strong>
-                </article>
-              ))}
-            </details>
-          )}
-          <div className="room-track">
-            <span className="micro">ESCAPE ROUTE</span>
-            {ROOM_INFO.map((r, i) => (
-              <div
-                key={r.title}
-                className={`route-stop ${i < g.roomIndex || g.phase === "won" || (i === g.roomIndex && g.phase === "cleared") ? "done" : i === g.roomIndex && g.phase !== "lobby" ? "current" : ""}`}
-              >
-                <span>
-                  {i < g.roomIndex ||
-                  g.phase === "won" ||
-                  (i === g.roomIndex && g.phase === "cleared") ? (
-                    <Check size={12} />
-                  ) : (
-                    String(i + 1).padStart(2, "0")
-                  )}
-                </span>
-                <p>{r.title}</p>
+            <div className="team-channel">
+              <div className="sidebar-heading">
+                <MessageSquare size={16} />
+                <h3>Team channel</h3>
               </div>
-            ))}
-          </div>
-          <div className="team-channel">
-            <div className="sidebar-heading">
-              <MessageSquare size={16} />
-              <h3>Team channel</h3>
-            </div>
-            <div
-              className="event-log"
-              ref={log}
-              role="log"
-              aria-label="Team activity and messages"
-              aria-live="polite"
-            >
-              {g.events.length ? (
-                g.events.slice(-20).map((e) => (
-                  <p key={e.id} className={`event-${e.kind}`}>
-                    {e.text}
-                  </p>
-                ))
-              ) : (
-                <p className="muted">
-                  Room messages and your discoveries appear here.
-                </p>
-              )}
-            </div>
-            <form
-              className="chat-form"
-              onSubmit={async (e) => {
-                e.preventDefault();
-                if (!chat.trim()) return;
-                const result = await action("chat", { text: chat });
-                if (result) setChat("");
-              }}
-            >
-              <label className="sr-only" htmlFor="chat">
-                Message your team
-              </label>
-              <input
-                id="chat"
-                placeholder="Share a thought…"
-                value={chat}
-                onChange={(e) => setChat(e.target.value)}
-                maxLength={240}
-                disabled={!!busy || !connected}
-              />
-              <button
-                className="icon-button"
-                aria-label="Send message"
-                disabled={!!busy || !connected || !chat.trim()}
+              <div
+                className="event-log"
+                ref={log}
+                role="log"
+                aria-label="Team activity and messages"
+                aria-live="polite"
               >
-                <Send size={16} />
-              </button>
-            </form>
-          </div>
-        </aside>
+                {g.events.length ? (
+                  g.events.slice(-20).map((e) => (
+                    <p key={e.id} className={`event-${e.kind}`}>
+                      {e.text}
+                    </p>
+                  ))
+                ) : (
+                  <p className="muted">
+                    Room messages and your discoveries appear here.
+                  </p>
+                )}
+              </div>
+              <form
+                className="chat-form"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!chat.trim()) return;
+                  const result = await action("chat", { text: chat });
+                  if (result) setChat("");
+                }}
+              >
+                <label className="sr-only" htmlFor="chat">
+                  Message your team
+                </label>
+                <input
+                  id="chat"
+                  placeholder="Share a thought…"
+                  value={chat}
+                  onChange={(e) => setChat(e.target.value)}
+                  maxLength={240}
+                  disabled={!!busy || !connected}
+                />
+                <button
+                  className="icon-button"
+                  aria-label="Send message"
+                  disabled={!!busy || !connected || !chat.trim()}
+                >
+                  <Send size={16} />
+                </button>
+              </form>
+            </div>
+          </aside>
+        )}
       </div>
     </main>
   );

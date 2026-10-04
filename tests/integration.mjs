@@ -1,3 +1,4 @@
+import { waitForLab } from "./http-helpers.mjs";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 const origin = process.env.GAME_TEST_URL ?? "http://127.0.0.1:5173";
@@ -37,7 +38,7 @@ const ready = await Promise.all(
   players.map((p) => request("ready", { ready: true }, p)),
 );
 ready.forEach((r) => assert.equal(r.status, 200, r.error));
-const started = await request("start", {}, host);
+const started = await waitForLab(() => request("state", {}, host));
 assert.equal(started.status, 200, started.error);
 const key = `${started.game.run}:main:0:0`;
 const submissions = await Promise.all(

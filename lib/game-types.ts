@@ -1,7 +1,14 @@
 import type { GameSettings } from "./game-settings.ts";
 import type { AvatarProfile } from "./profiles.ts";
 export type Difficulty = "junior" | "senior";
-export type Phase = "lobby" | "main" | "detention" | "cleared" | "won" | "lost";
+export type Phase =
+  | "lobby"
+  | "loading"
+  | "main"
+  | "detention"
+  | "cleared"
+  | "won"
+  | "lost";
 export interface Player {
   id: string;
   name: string;
@@ -92,6 +99,8 @@ export interface Snapshot extends GameSettings {
   score: number;
   punishment: number;
   deadline: number | null;
+  entryAt: number | null;
+  discovered: string[];
   serverNow: number;
   version: number;
   run: number;
@@ -113,12 +122,12 @@ export interface Session {
 }
 export const ROOM_INFO = [
   {
-    title: "The Locked Classroom",
+    title: "The Abandoned Laboratory",
     topic: "Arithmetic & patterns",
     quote:
       "A reunion? How touching. Take your seats. The door has other plans.",
     story:
-      "The invitation promised a reunion dinner. Instead, three locks click shut. Voss's old grade book sits open: your names are circled in green ink.",
+      "The invitation promised a reunion dinner. Instead, three locks seal an abandoned science laboratory. Voss's old grade book sits open: your names are circled in green ink.",
   },
   {
     title: "The Fraction Factory",

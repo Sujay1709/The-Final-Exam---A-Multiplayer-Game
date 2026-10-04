@@ -1,3 +1,4 @@
+import { waitForLab } from "./http-helpers.mjs";
 import assert from "node:assert/strict";
 import { PUZZLES } from "../lib/puzzles.ts";
 const origin = process.env.GAME_TEST_URL ?? "http://localhost:5173";
@@ -30,7 +31,7 @@ for (let round = 1; round <= 2; round++) {
   await Promise.all(
     [h, b].map((p) => post("ready", { ready: true }, p.session)),
   );
-  const start = await post("start", {}, h.session);
+  const start = await waitForLab(() => post("state", {}, h.session));
   assert.equal(start.status, 200, start.error);
   assert.equal(start.game.series.round, round);
   for (let room = 0; room < 5; room++) {

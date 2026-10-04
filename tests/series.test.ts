@@ -52,8 +52,10 @@ function readyStart(g: GameState, at: number) {
   for (const p of g.players.filter((p) => p.kind === "human" && !p.left))
     action(g, p.id, "ready", at, { ready: true });
   action(g, g.hostId, "start", at);
+  advanceClock(g, at + 10000);
 }
 function finishRound(g: GameState, winner: string, at: number) {
+  at = Math.max(at, g.startedAt!);
   const players = g.players
     .filter((p) => p.kind === "human" && !p.left)
     .sort((a, b) => Number(b.id === winner) - Number(a.id === winner));
@@ -151,7 +153,7 @@ test("three different winners yield a draw; stale-round votes never advance a la
 });
 test("no-escape rounds, disconnected votes, and host migration settle without invented wins", () => {
   const g = fixture();
-  const expiry = T + 300000;
+  const expiry = T + 310000;
   advanceClock(g, expiry);
   assert.equal(g.phase, "lost");
   assert.equal(g.series!.rounds[0].winnerId, null);
@@ -166,8 +168,8 @@ test("no-escape rounds, disconnected votes, and host migration settle without in
   assert.equal(g.phase, "lobby");
   assert.equal(g.series!.round, 2);
   readyStart(g, expiry + 31000);
-  advanceClock(g, expiry + 331000);
-  action(g, g.hostId, "endSeries", expiry + 331000);
+  advanceClock(g, expiry + 341000);
+  action(g, g.hostId, "endSeries", expiry + 341000);
   assert.equal(g.series, null);
   assert.equal(g.bestOfThree, false);
   assert.equal(g.phase, "lobby");

@@ -45,6 +45,7 @@ jobs:
           node tests/race-http.mjs
           node tests/fresh-http.mjs
           node tests/series-http.mjs
+          node tests/lab-http.mjs
       - name: Show server diagnostics on failure
         if: failure()
         run: cat /tmp/final-exam-server.log

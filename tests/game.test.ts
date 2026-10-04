@@ -26,7 +26,8 @@ function fixture(difficulty: "junior" | "senior" = "junior") {
     lastAnswer: 0,
   });
   g.players[0].ready = true;
-  mutateGame(g, { op: "start", token: "token" }, T);
+  mutateGame(g, { op: "start", token: "token" }, T - 10000);
+  advanceClock(g, T);
   return g;
 }
 function answer(
