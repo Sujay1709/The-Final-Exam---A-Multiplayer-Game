@@ -10,7 +10,7 @@ Official references: [Next.js on Vercel](https://vercel.com/docs/frameworks/full
 
 ## 1. Use the compatibility branch
 
-Deploy **`codex/rivalry-series`** for the complete game and all three engagement improvements. The underlying compatibility fix is on `codex/vercel-compat`. The earlier feature PRs remain open and GitHub `main` has not been changed. A deployment from old `main` or `codex/race-bots` will still use the previous build/runtime.
+Deploy **`codex/lab-entry`** for the complete game and all three engagement improvements. The underlying compatibility fix is on `codex/vercel-compat`. The earlier feature PRs remain open and GitHub `main` has not been changed. A deployment from old `main` or `codex/race-bots` will still use the previous build/runtime.
 
 ## 2. Create durable multiplayer storage
 
@@ -38,7 +38,7 @@ The last command prints a secret. Copy it directly to Vercel's environment setti
 | Install Command | `npm run install:ci` |
 | Build Command | `npm run build` |
 | Output Directory | `.next` (or Next.js default; remove any old `dist` override) |
-| Branch for this preview | `codex/rivalry-series` |
+| Branch for this preview | `codex/lab-entry` |
 
 `vercel.json` commits the framework/build/install/output settings. If the dashboard still has old custom values, clear them or match the table.
 
@@ -73,13 +73,14 @@ node tests/profiles-http.mjs
 node tests/race-http.mjs
 node tests/fresh-http.mjs
 node tests/series-http.mjs
+node tests/lab-http.mjs
 ```
 
 The production checks exercise the same Next.js API used by Vercel. They cover eight humans, two humans/six bots, concurrent scoring, profile permissions, private snapshots, and replay protection. Remote credentials and a real hosted deployment are still needed for an end-to-end cloud check.
 
 ## 5. Check the deployed game
 
-Open the HTTPS deployment URL on two independent browsers/devices. Complete the opening cinematic, create/join a room, ready both humans, and start a Race. Verify bot seats, independent progress, avatar synchronization, and a refresh reconnect. Optionally run the HTTP suites against a **disposable Preview database**:
+Open the HTTPS deployment URL on two independent browsers/devices. Complete the opening cinematic, create/join a room, ready both humans, watch the automatic ten-second countdown, and search the laboratory objects. Verify bot seats, independent progress, avatar synchronization, and a refresh reconnect. Optionally run the HTTP suites against a **disposable Preview database**:
 
 ```sh
 GAME_TEST_URL=https://your-preview.vercel.app node tests/integration.mjs
@@ -87,6 +88,7 @@ GAME_TEST_URL=https://your-preview.vercel.app node tests/profiles-http.mjs
 GAME_TEST_URL=https://your-preview.vercel.app node tests/race-http.mjs
 GAME_TEST_URL=https://your-preview.vercel.app node tests/fresh-http.mjs
 GAME_TEST_URL=https://your-preview.vercel.app node tests/series-http.mjs
+node tests/lab-http.mjs
 ```
 
 These tests create rooms. Do not point them at Production unless you intend to create test matches there. Vercel deployment protection may prevent direct HTTP test access; a login-protected preview is not a broken API.

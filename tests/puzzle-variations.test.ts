@@ -55,7 +55,8 @@ test("fresh Race questions persist through JSON reconnect, stay private, and cha
   let g=createGame("ABCDEF","Host","senior","h-token","h",T,defaultAvatar(),{mode:"race",fillBots:false,freshPuzzles:true});
   joinGame(g,"Guest",defaultAvatar(),"b-token","b",T);
   g.players.forEach(p=>p.ready=true);
-  mutateGame(g,{op:"start",token:"h-token"},T);
+  mutateGame(g,{op:"start",token:"h-token"},T-10000);
+  advanceClock(g,T);
   const first=structuredClone(g.puzzleRooms!);
   const h=snapshot(g,1,T,"h"),b=snapshot(g,1,T,"b");
   assert.deepEqual(h.puzzles,b.puzzles);

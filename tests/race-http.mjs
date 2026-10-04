@@ -1,3 +1,4 @@
+import { waitForLab } from "./http-helpers.mjs";
 import assert from "node:assert/strict";
 const url = process.env.GAME_TEST_URL || "http://localhost:5173";
 async function post(a, status = 200) {
@@ -24,7 +25,7 @@ await post({ op: "settings", ...b.session, gameDifficulty: "hard" }, 403);
 await post({ op: "settings", ...h.session, gameDifficulty: "nightmare" }, 400);
 await post({ op: "ready", ...h.session, ready: true });
 await post({ op: "ready", ...b.session, ready: true });
-const start = await post({ op: "start", ...h.session });
+const start = await waitForLab(() => post({ op: "state", ...h.session }));
 const key = (g) => `${g.run}:${g.phase}:${g.roomIndex}:${g.punishment}`;
 await post({ op: "join", code: h.session.code, name: "Late" }, 409);
 const actions = [h, b].map((p) => ({
@@ -84,7 +85,7 @@ await post({ op: "join", code: eight.session.code, name: "Ninth" }, 409);
 await Promise.all(
   people.map((p) => post({ op: "ready", ...p.session, ready: true })),
 );
-const eightStart = await post({ op: "start", ...eight.session });
+const eightStart = await waitForLab(() => post({ op: "state", ...eight.session }));
 assert.equal(eightStart.game.players.length, 8);
 assert.equal(eightStart.game.leaderboard.length, 8);
 console.log(

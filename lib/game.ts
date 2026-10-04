@@ -17,6 +17,8 @@ import {
 } from "./profiles.ts";
 import {
   GAME_RULES,
+  LAB_ENTRY_SECONDS,
+  minimumHumans,
   BOT_RULES,
   validateSettings,
   type GameSettings,
@@ -32,6 +34,7 @@ export interface Progress {
   deadline: number | null;
   solved: Record<string, string>;
   hinted: string[];
+  discovered: string[];
   events: GameEvent[];
   result: string | null;
   correctCount: number;
@@ -65,6 +68,7 @@ export interface GameState extends Progress, GameSettings {
   puzzleRooms?: Puzzle[][];
   series: SeriesView | null;
   rematchVotes: string[];
+  entryAt: number | null;
 }
 export interface Action extends Partial<GameSettings> {
   op: string;
@@ -96,6 +100,7 @@ const freshProgress = (): Progress => ({
   deadline: null,
   solved: {},
   hinted: [],
+  discovered: [],
   events: [],
   result: null,
   correctCount: 0,
@@ -133,6 +138,11 @@ export function normalizeGame(g: GameState): GameState {
   g.freshPuzzles ??= false;
   g.bestOfThree ??= false;
   g.series ??= null;
+  // Readiness from the old host-start lobby does not imply consent to an
+  // automatic start after an upgrade. Existing active deadlines remain intact.
+  if (g.entryAt === undefined && g.phase === "lobby")
+    g.players.filter((p) => p.kind !== "bot").forEach((p) => (p.ready = false));
+  g.entryAt ??= null;
   g.rematchVotes ??= [];
   g.seed ??= 1;
   g.winnerId ??= null;
@@ -142,6 +152,7 @@ export function normalizeGame(g: GameState): GameState {
   g.place ??= null;
   const normalizeProgress = (p: Progress) => {
     p.startedAt ??= null;
+    p.discovered ??= [];
     p.correctCount ??= Object.keys(p.solved).length;
     p.streak ??= 0;
     p.bestStreak ??= 0;
@@ -199,6 +210,7 @@ export function createGame(
     finishCount: 0,
     series: null,
     rematchVotes: [],
+    entryAt: null,
   };
   syncBots(g);
   return g;
@@ -348,6 +360,7 @@ function solve(
   at: number,
 ) {
   if (p.solved[puzzle.id]) return;
+  if (!p.discovered.includes(puzzle.id)) p.discovered.push(puzzle.id);
   const rules = GAME_RULES[g.gameDifficulty];
   const correct =
     Math.abs(value - puzzle.answer) <=
@@ -458,8 +471,77 @@ function settleRace(g: GameState, at: number) {
     recordSeriesRound(g);
   }
 }
+function canBegin(g: GameState, now: number) {
+  const humans = g.players.filter((p) => p.kind === "human" && !p.left);
+  return (
+    humans.length >= minimumHumans(g) &&
+    humans.length <= 8 &&
+    humans.every((p) => p.ready && now - p.lastSeen < 30000)
+  );
+}
+function beginCountdown(g: GameState, now: number) {
+  g.puzzleRooms = g.freshPuzzles
+    ? generatePuzzleRooms(
+        g.difficulty,
+        (g.seed ^ Math.imul(g.run, 2654435761)) >>> 0,
+      )
+    : undefined;
+  g.phase = "loading";
+  g.entryAt = now + LAB_ENTRY_SECONDS * 1000;
+  if (g.bestOfThree && !g.series) {
+    g.series = {
+      round: 1,
+      complete: false,
+      championId: null,
+      rounds: [],
+      standings: g.players.map((p) => ({
+        playerId: p.id,
+        name: p.name,
+        kind: p.kind,
+        wins: 0,
+      })),
+    };
+  }
+  if (g.mode === "race")
+    g.players.forEach((p) => {
+      p.progress = { ...freshProgress(), phase: "loading" };
+      p.nextAttemptAt = null;
+    });
+  event(
+    g,
+    "All humans ready. Voss is sealing the laboratory. Doors open in 10 seconds.",
+    "story",
+    now,
+  );
+}
+function maybeBegin(g: GameState, now: number) {
+  if (g.phase === "lobby" && canBegin(g, now)) beginCountdown(g, now);
+}
+function openLaboratory(g: GameState, at: number) {
+  g.phase = "main";
+  g.startedAt = at;
+  g.entryAt = null;
+  const enter = (p: Progress) => {
+    p.phase = "main";
+    p.startedAt = at;
+    p.deadline = at + GAME_RULES[g.gameDifficulty].main * 1000;
+    event(p, ROOM_INFO[0].quote, "story", at);
+  };
+  if (g.mode === "race")
+    g.players
+      .filter((p) => !p.left)
+      .forEach((p) => {
+        enter(p.progress!);
+        if (p.kind === "bot") schedule(g, p, at);
+      });
+  else enter(g);
+}
 export function advanceClock(g: GameState, now: number) {
   normalizeGame(g);
+  if (g.phase === "loading") {
+    if (g.entryAt === null || now < g.entryAt) return;
+    openLaboratory(g, g.entryAt);
+  }
   if (g.mode === "coop") {
     // Catch up from actual deadlines, including a detention expiry while disconnected.
     while (
@@ -570,6 +652,7 @@ function resetRound(g: GameState) {
   g.finishCount = 0;
   g.receipts = [];
   g.rematchVotes = [];
+  g.entryAt = null;
   g.puzzleRooms = undefined;
   if (g.series && !g.series.complete) g.series.round++;
   g.players = g.players.filter((p) => !p.left);
@@ -586,7 +669,7 @@ function maybeRematch(g: GameState, now: number) {
   if (!terminal(g) || g.series?.complete) return;
   const humans = g.players.filter((p) => p.kind === "human" && !p.left);
   if (
-    humans.length < 2 ||
+    humans.length < minimumHumans(g) ||
     humans.some(
       (p) => now - p.lastSeen >= 30000 || !g.rematchVotes.includes(p.id),
     )
@@ -618,6 +701,7 @@ export function mutateGame(g: GameState, a: Action, now: number): GameState {
   advanceClock(g, now);
   if (a.op === "state") {
     maybeRematch(g, now);
+    maybeBegin(g, now);
     return g;
   }
   const receipt = a.id ? `${player.id}:${a.id}` : null;
@@ -687,51 +771,21 @@ export function mutateGame(g: GameState, a: Action, now: number): GameState {
   } else if (a.op === "ready") {
     if (g.phase !== "lobby")
       throw new GameError("The experiment has already started.");
-    player.ready = !!a.ready;
+    if (typeof a.ready !== "boolean")
+      throw new GameError("Choose whether you are ready.");
+    player.ready = a.ready;
   } else if (a.op === "start") {
     requireHost(g, player);
     if (g.phase !== "lobby") return g;
-    if (humans.length < 2 || humans.length > 8)
-      throw new GameError("Gather 2–8 human players before starting.");
-    if (humans.some((x) => !x.ready || now - x.lastSeen >= 30000))
+    if (humans.length < minimumHumans(g) || humans.length > 8)
+      throw new GameError(
+        g.mode === "race" && g.fillBots
+          ? "Gather 1–8 human players before starting a bot race."
+          : "Gather 2–8 human players before starting.",
+      );
+    if (!canBegin(g, now))
       throw new GameError("Every human player must be connected and ready.");
-    g.puzzleRooms = g.freshPuzzles
-      ? generatePuzzleRooms(
-          g.difficulty,
-          (g.seed ^ Math.imul(g.run, 2654435761)) >>> 0,
-        )
-      : undefined;
-    g.phase = "main";
-    g.startedAt = now;
-    if (g.bestOfThree && !g.series) {
-      g.series = {
-        round: 1,
-        complete: false,
-        championId: null,
-        rounds: [],
-        standings: g.players.map((p) => ({
-          playerId: p.id,
-          name: p.name,
-          kind: p.kind,
-          wins: 0,
-        })),
-      };
-    }
-    if (g.mode === "race")
-      g.players.forEach((x) => {
-        x.progress = {
-          ...freshProgress(),
-          phase: "main",
-          startedAt: now,
-          deadline: now + GAME_RULES[g.gameDifficulty].main * 1000,
-        };
-        if (x.kind === "bot") schedule(g, x, now);
-        event(x.progress, ROOM_INFO[0].quote, "story", now);
-      });
-    else {
-      g.deadline = now + GAME_RULES[g.gameDifficulty].main * 1000;
-      event(g, ROOM_INFO[0].quote, "story", now);
-    }
+    beginCountdown(g, now);
   } else if (a.op === "next") {
     requireHost(g, player);
     if (g.mode === "race")
@@ -801,6 +855,7 @@ export function mutateGame(g: GameState, a: Action, now: number): GameState {
       g.phase = g.winnerId ? "won" : "lost";
       g.deadline = null;
       g.result = "All human players left the experiment.";
+      g.entryAt = null;
       g.players.forEach((x) => {
         x.nextAttemptAt = null;
         if (x.progress && !terminal(x.progress)) {
@@ -840,6 +895,7 @@ export function mutateGame(g: GameState, a: Action, now: number): GameState {
     if (p.solved[q.id]) return g;
     if (q.requires?.some((id) => !p.solved[id]))
       throw new GameError("Solve both code fragments first.");
+    if (!p.discovered.includes(q.id)) p.discovered.push(q.id);
     if (a.op === "claim") player.working = q.id;
     if (a.op === "hint" && !p.hinted.includes(q.id)) {
       p.hinted.push(q.id);
@@ -866,6 +922,7 @@ export function mutateGame(g: GameState, a: Action, now: number): GameState {
     }
     if (g.mode === "race") settleRace(g, now);
   } else throw new GameError("Unknown game action.");
+  maybeBegin(g, now);
   if (receipt) {
     g.receipts.push(receipt);
     g.receipts = g.receipts.slice(-512);
@@ -960,6 +1017,8 @@ export function snapshot(
     score: p.score,
     punishment: p.punishment,
     deadline: p.deadline,
+    entryAt: g.phase === "loading" ? g.entryAt : null,
+    discovered: [...p.discovered],
     serverNow: now,
     version,
     run: g.run,
@@ -979,7 +1038,7 @@ export function snapshot(
       working: g.mode === "race" && x.id !== viewerId ? null : x.working,
     })),
     puzzles:
-      p.phase === "lobby"
+      p.phase === "lobby" || p.phase === "loading"
         ? []
         : currentPuzzles(g, p).map((q) => ({
             id: q.id,

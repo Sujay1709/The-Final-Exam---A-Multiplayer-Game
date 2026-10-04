@@ -8,7 +8,8 @@ test("streaks are cosmetic, private in Race, shared in Co-op, and replay safe", 
     const g = createGame("ABCDEF", "Host", "junior", "host-token", "host", T, defaultAvatar(), { mode, fillBots:false });
     joinGame(g, "Guest", defaultAvatar(), "guest-token", "guest", T);
     g.players.forEach(p => p.ready = true);
-    mutateGame(g, { op:"start", token:"host-token" }, T);
+    mutateGame(g, { op:"start", token:"host-token" }, T - 10000);
+    advanceClock(g, T);
     const submit = (puzzleId:string, value:number, at:number, id:string) => mutateGame(g, { op:"answer", token:"host-token", puzzleId, answer:String(value), phaseKey:phaseKey(g,"host"), id }, at);
     submit("j0a", 26, T+1000, "one");
     const p = mode === "race" ? g.players[0].progress! : g;
