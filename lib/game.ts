@@ -8,6 +8,7 @@ import {
   type Phase,
   type GameEvent,
   type AnswerFeedback,
+  type SeriesView,
 } from "./game-types.ts";
 import {
   defaultAvatar,
@@ -24,6 +25,7 @@ import {
 // The same rules operate on shared co-op progress or one private racer.
 export interface Progress {
   phase: Phase;
+  startedAt: number | null;
   roomIndex: number;
   score: number;
   punishment: number;
@@ -61,6 +63,8 @@ export interface GameState extends Progress, GameSettings {
   winnerId: string | null;
   finishCount: number;
   puzzleRooms?: Puzzle[][];
+  series: SeriesView | null;
+  rematchVotes: string[];
 }
 export interface Action extends Partial<GameSettings> {
   op: string;
@@ -85,6 +89,7 @@ export class GameError extends Error {
 const terminal = (p: Progress) => p.phase === "won" || p.phase === "lost";
 const freshProgress = (): Progress => ({
   phase: "lobby",
+  startedAt: null,
   roomIndex: 0,
   score: 0,
   punishment: 0,
@@ -126,6 +131,9 @@ export function normalizeGame(g: GameState): GameState {
   g.botSkill ??= "medium";
   g.fillBots ??= false;
   g.freshPuzzles ??= false;
+  g.bestOfThree ??= false;
+  g.series ??= null;
+  g.rematchVotes ??= [];
   g.seed ??= 1;
   g.winnerId ??= null;
   g.finishCount ??= 0;
@@ -133,6 +141,7 @@ export function normalizeGame(g: GameState): GameState {
   g.finishedAt ??= null;
   g.place ??= null;
   const normalizeProgress = (p: Progress) => {
+    p.startedAt ??= null;
     p.correctCount ??= Object.keys(p.solved).length;
     p.streak ??= 0;
     p.bestStreak ??= 0;
@@ -164,6 +173,7 @@ export function createGame(
       botSkill: "medium",
       fillBots: false,
       freshPuzzles: false,
+      bestOfThree: false,
     }),
     code,
     difficulty,
@@ -187,6 +197,8 @@ export function createGame(
     seed: crypto.getRandomValues(new Uint32Array(1))[0] || 1,
     winnerId: null,
     finishCount: 0,
+    series: null,
+    rematchVotes: [],
   };
   syncBots(g);
   return g;
@@ -231,6 +243,11 @@ export function joinGame(
   now: number,
 ) {
   normalizeGame(g);
+  if (g.series && g.series.rounds.length && !g.series.complete)
+    throw new GameError(
+      "This rivalry has started. Join a new series instead.",
+      409,
+    );
   if (g.phase !== "lobby")
     throw new GameError(
       "This experiment has started. Reconnect on your original device.",
@@ -272,6 +289,7 @@ function timeout(g: GameState, p: Progress, at: number) {
   p.streak = 0;
   if (p.phase === "detention") {
     p.phase = "lost";
+    if (g.mode === "coop") p.finishedAt = at;
     p.deadline = null;
     p.result = "Detention expired. Voss has kept you for another semester.";
     event(p, p.result, "warning", at);
@@ -281,6 +299,7 @@ function timeout(g: GameState, p: Progress, at: number) {
   p.score = Math.max(0, p.score - 100);
   if (p.punishment >= 4) {
     p.phase = "lost";
+    if (g.mode === "coop") p.finishedAt = at;
     p.deadline = null;
     p.result = "Four missed deadlines. The professor has ended the experiment.";
     event(p, p.result, "warning", at);
@@ -330,7 +349,8 @@ function solve(
 ) {
   if (p.solved[puzzle.id]) return;
   const rules = GAME_RULES[g.gameDifficulty];
-  const correct = Math.abs(value - puzzle.answer) <=
+  const correct =
+    Math.abs(value - puzzle.answer) <=
     1e-7 * Math.max(1, Math.abs(puzzle.answer));
   p.lastAnswerFeedback = {
     id: `${g.run}:${player.id}:${p.correctCount + p.wrongCount + 1}`,
@@ -377,6 +397,7 @@ function solve(
         clearWorking(g, p);
         if (p.roomIndex === 4) {
           p.phase = "won";
+          if (g.mode === "coop") p.finishedAt = at;
           p.result =
             "The exit opens. Voss reads the letter and finally understands: his teammates never forgot him.";
           event(p, p.result, "success", at);
@@ -434,6 +455,7 @@ function settleRace(g: GameState, at: number) {
     g.result = g.winnerId
       ? "The race is complete."
       : "No one escaped the experiment.";
+    recordSeriesRound(g);
   }
 }
 export function advanceClock(g: GameState, now: number) {
@@ -493,8 +515,7 @@ export function advanceClock(g: GameState, now: number) {
       timeout(g, p, at);
       // A main-room attempt cannot spill into the newly entered detention.
       if (player.kind === "bot" && !terminal(p)) schedule(g, player, at);
-    }
-    else if (kind === "next") {
+    } else if (kind === "next") {
       nextRoom(g, p, at);
       if (player.kind === "bot") schedule(g, player, at);
     } else {
@@ -519,6 +540,60 @@ export function advanceClock(g: GameState, now: number) {
     if (terminal(g)) break;
   }
 }
+function recordSeriesRound(g: GameState) {
+  const series = g.series;
+  if (!series || !terminal(g) || series.rounds.some((r) => r.run === g.run))
+    return;
+  const winner = g.players.find((p) => p.id === g.winnerId);
+  series.rounds.push({
+    run: g.run,
+    round: series.round,
+    winnerId: g.winnerId,
+    winnerName: winner?.name ?? null,
+  });
+  if (winner) {
+    const standing = series.standings.find((p) => p.playerId === winner.id);
+    if (standing) standing.wins++;
+  }
+  const maxWins = Math.max(0, ...series.standings.map((p) => p.wins));
+  series.complete = maxWins >= 2 || series.rounds.length >= 3;
+  if (series.complete) {
+    const leaders = series.standings.filter((p) => p.wins === maxWins);
+    series.championId =
+      maxWins > 0 && leaders.length === 1 ? leaders[0].playerId : null;
+  }
+}
+function resetRound(g: GameState) {
+  Object.assign(g, freshProgress());
+  g.run++;
+  g.winnerId = null;
+  g.finishCount = 0;
+  g.receipts = [];
+  g.rematchVotes = [];
+  g.puzzleRooms = undefined;
+  if (g.series && !g.series.complete) g.series.round++;
+  g.players = g.players.filter((p) => !p.left);
+  g.players.forEach((p) => {
+    p.ready = false;
+    p.lastAnswer = 0;
+    p.working = null;
+    delete p.progress;
+    p.nextAttemptAt = null;
+  });
+  syncBots(g);
+}
+function maybeRematch(g: GameState, now: number) {
+  if (!terminal(g) || g.series?.complete) return;
+  const humans = g.players.filter((p) => p.kind === "human" && !p.left);
+  if (
+    humans.length < 2 ||
+    humans.some(
+      (p) => now - p.lastSeen >= 30000 || !g.rematchVotes.includes(p.id),
+    )
+  )
+    return;
+  resetRound(g);
+}
 function requireHost(g: GameState, p: PrivatePlayer) {
   if (g.hostId !== p.id || p.kind !== "human")
     throw new GameError("Only the host can do that.", 403);
@@ -541,7 +616,10 @@ export function mutateGame(g: GameState, a: Action, now: number): GameState {
     event(g, `${connected[0].name} is now the host.`, "story", now);
   }
   advanceClock(g, now);
-  if (a.op === "state") return g;
+  if (a.op === "state") {
+    maybeRematch(g, now);
+    return g;
+  }
   const receipt = a.id ? `${player.id}:${a.id}` : null;
   if (receipt && g.receipts.includes(receipt)) return g;
   const p = g.mode === "race" ? (player.progress ?? g) : g;
@@ -574,6 +652,10 @@ export function mutateGame(g: GameState, a: Action, now: number): GameState {
     requireHost(g, player);
     if (g.phase !== "lobby")
       throw new GameError("Room settings can change only in the lobby.");
+    if (g.series && g.series.rounds.length && !g.series.complete)
+      throw new GameError(
+        "Room settings stay fixed during a rivalry. End it to change them.",
+      );
     let settings: GameSettings;
     try {
       settings = validateSettings({
@@ -582,6 +664,7 @@ export function mutateGame(g: GameState, a: Action, now: number): GameState {
         botSkill: a.botSkill ?? g.botSkill,
         fillBots: a.fillBots ?? g.fillBots,
         freshPuzzles: a.freshPuzzles ?? g.freshPuzzles,
+        bestOfThree: a.bestOfThree ?? g.bestOfThree,
       });
     } catch (e) {
       throw new GameError((e as Error).message);
@@ -613,14 +696,33 @@ export function mutateGame(g: GameState, a: Action, now: number): GameState {
     if (humans.some((x) => !x.ready || now - x.lastSeen >= 30000))
       throw new GameError("Every human player must be connected and ready.");
     g.puzzleRooms = g.freshPuzzles
-      ? generatePuzzleRooms(g.difficulty, (g.seed ^ Math.imul(g.run, 2654435761)) >>> 0)
+      ? generatePuzzleRooms(
+          g.difficulty,
+          (g.seed ^ Math.imul(g.run, 2654435761)) >>> 0,
+        )
       : undefined;
     g.phase = "main";
+    g.startedAt = now;
+    if (g.bestOfThree && !g.series) {
+      g.series = {
+        round: 1,
+        complete: false,
+        championId: null,
+        rounds: [],
+        standings: g.players.map((p) => ({
+          playerId: p.id,
+          name: p.name,
+          kind: p.kind,
+          wins: 0,
+        })),
+      };
+    }
     if (g.mode === "race")
       g.players.forEach((x) => {
         x.progress = {
           ...freshProgress(),
           phase: "main",
+          startedAt: now,
           deadline: now + GAME_RULES[g.gameDifficulty].main * 1000,
         };
         if (x.kind === "bot") schedule(g, x, now);
@@ -643,20 +745,45 @@ export function mutateGame(g: GameState, a: Action, now: number): GameState {
     requireHost(g, player);
     if (!terminal(g))
       throw new GameError("Finish the current experiment before restarting.");
-    Object.assign(g, freshProgress());
-    g.run++;
-    g.winnerId = null;
-    g.finishCount = 0;
-    g.receipts = [];
-    g.players = g.players.filter((x) => !x.left);
-    g.players.forEach((x) => {
-      x.ready = false;
-      x.lastAnswer = 0;
-      x.working = null;
-      delete x.progress;
-      x.nextAttemptAt = null;
-    });
-    syncBots(g);
+    if (g.series && !g.series.complete)
+      throw new GameError(
+        "Vote for the next round or explicitly end the rivalry.",
+      );
+    g.series = null;
+    resetRound(g);
+  } else if (a.op === "endSeries") {
+    requireHost(g, player);
+    if (a.phaseKey !== phaseKey(g, player.id))
+      throw new GameError(
+        "The round changed. Review the current results.",
+        409,
+      );
+    if (!terminal(g) || !g.series)
+      throw new GameError(
+        "Finish the current round before ending the rivalry.",
+      );
+    g.series = null;
+    g.bestOfThree = false;
+    resetRound(g);
+  } else if (a.op === "rematch") {
+    if (a.phaseKey !== phaseKey(g, player.id))
+      throw new GameError(
+        "The round changed. Review the current results.",
+        409,
+      );
+    if (!terminal(g))
+      throw new GameError(
+        "Wait for every racer to finish or leave before voting.",
+      );
+    if (g.series?.complete)
+      throw new GameError(
+        "The rivalry is complete. The host can start a new series.",
+      );
+    if (typeof a.ready !== "boolean")
+      throw new GameError("Choose whether to vote for a rematch.");
+    g.rematchVotes = g.rematchVotes.filter((id) => id !== player.id);
+    if (a.ready) g.rematchVotes.push(player.id);
+    maybeRematch(g, now);
   } else if (a.op === "leave") {
     if (g.mode === "race" && player.progress && !terminal(player.progress)) {
       player.progress.phase = "lost";
@@ -684,6 +811,9 @@ export function mutateGame(g: GameState, a: Action, now: number): GameState {
       });
     } else if (g.phase === "lobby") syncBots(g);
     else if (g.mode === "race") settleRace(g, now);
+    g.rematchVotes = g.rematchVotes.filter((id) => id !== player.id);
+    recordSeriesRound(g);
+    maybeRematch(g, now);
     event(g, `${player.name} left the laboratory.`, "story", now);
   } else if (a.op === "chat") {
     if (typeof a.text !== "string" || !a.text.trim() || a.text.length > 240)
@@ -780,16 +910,17 @@ export function snapshot(
               a.playerId.localeCompare(b.playerId),
           )
       : [];
-  const review = (g.puzzleRooms ?? PUZZLES[g.difficulty]).flatMap((questions, i) =>
-    questions
-      .filter((q) => p.solved[q.id])
-      .map((q) => ({
-        id: q.id,
-        title: q.title,
-        prompt: q.prompt,
-        solution: q.solution,
-        room: ROOM_INFO[i].title,
-      })),
+  const review = (g.puzzleRooms ?? PUZZLES[g.difficulty]).flatMap(
+    (questions, i) =>
+      questions
+        .filter((q) => p.solved[q.id])
+        .map((q) => ({
+          id: q.id,
+          title: q.title,
+          prompt: q.prompt,
+          solution: q.solution,
+          room: ROOM_INFO[i].title,
+        })),
   );
   return {
     code: g.code,
@@ -799,6 +930,30 @@ export function snapshot(
     botSkill: g.botSkill,
     fillBots: g.fillBots,
     freshPuzzles: g.freshPuzzles,
+    bestOfThree: g.bestOfThree,
+    series: g.series
+      ? {
+          ...g.series,
+          rounds: g.series.rounds.map((r) => ({ ...r })),
+          standings: g.series.standings
+            .map((s) => ({
+              ...s,
+              name: g.players.find((p) => p.id === s.playerId)?.name ?? s.name,
+            }))
+            .sort(
+              (a, b) => b.wins - a.wins || a.playerId.localeCompare(b.playerId),
+            ),
+        }
+      : null,
+    rematchVotes: [...g.rematchVotes],
+    accuracy:
+      p.correctCount + p.wrongCount > 0
+        ? p.correctCount / (p.correctCount + p.wrongCount)
+        : null,
+    elapsedSeconds:
+      p.startedAt !== null
+        ? Math.max(0, Math.floor(((p.finishedAt ?? now) - p.startedAt) / 1000))
+        : null,
     phase: p.phase,
     roomIndex: p.roomIndex,
     hostId: g.hostId,

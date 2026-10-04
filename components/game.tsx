@@ -25,6 +25,7 @@ import {
   Flame,
 } from "lucide-react";
 import { RoomSettings } from "./room-settings";
+import { SeriesScoreboard } from "./series-scoreboard";
 import { GAME_RULES } from "@/lib/game-settings";
 import { Avatar } from "./avatar";
 import type { Preferences } from "@/lib/use-preferences";
@@ -253,26 +254,57 @@ export function Game({
           {error}
         </p>
       )}
+      {g.series && (
+        <SeriesScoreboard
+          series={g.series}
+          expanded={ended || g.phase === "lobby"}
+        />
+      )}
       <div className="play-layout">
         <section className="main-board">
           {g.phase !== "lobby" && (
             <div className="solve-feedback-area">
-              <span className={`streak-badge ${g.streak >= 3 ? "on-fire" : ""}`}>
+              <span
+                className={`streak-badge ${g.streak >= 3 ? "on-fire" : ""}`}
+              >
                 <Flame size={18} aria-hidden="true" />
                 {race ? "Your" : "Team"} streak: {g.streak}
-                <small>{g.bestStreak >= 5 ? "Lab legend" : g.bestStreak >= 3 ? "Sharp mind" : `Best ${g.bestStreak}`}</small>
+                <small>
+                  {g.bestStreak >= 5
+                    ? "Lab legend"
+                    : g.bestStreak >= 3
+                      ? "Sharp mind"
+                      : `Best ${g.bestStreak}`}
+                </small>
               </span>
               {g.lastAnswer && now - g.lastAnswer.at < 8000 && (
-                <p key={g.lastAnswer.id} className={`answer-feedback ${g.lastAnswer.correct ? "correct" : "incorrect"}`} role="status">
-                  {g.lastAnswer.correct ? <LockOpen size={20} aria-hidden="true" /> : <TriangleAlert size={20} aria-hidden="true" />}
-                  <span>{g.lastAnswer.correct ? `Lock opened! +20 seconds${g.lastAnswer.main ? " · +100 points" : ""}` : `Incorrect · −${rules.wrong} seconds. Try again.`}</span>
+                <p
+                  key={g.lastAnswer.id}
+                  className={`answer-feedback ${g.lastAnswer.correct ? "correct" : "incorrect"}`}
+                  role="status"
+                >
+                  {g.lastAnswer.correct ? (
+                    <LockOpen size={20} aria-hidden="true" />
+                  ) : (
+                    <TriangleAlert size={20} aria-hidden="true" />
+                  )}
+                  <span>
+                    {g.lastAnswer.correct
+                      ? `Lock opened! +20 seconds${g.lastAnswer.main ? " · +100 points" : ""}`
+                      : `Incorrect · −${rules.wrong} seconds. Try again.`}
+                  </span>
                 </p>
               )}
             </div>
           )}
           {g.phase === "lobby" ? (
             <>
-              <div className="eyebrow">EXPERIMENT 001 / WAITING ROOM</div>
+              <div className="eyebrow">
+                {g.series
+                  ? `RIVALRY ROUND ${g.series.round} OF 3`
+                  : "EXPERIMENT 001"}{" "}
+                / WAITING ROOM
+              </div>
               <h1 className="screen-title">
                 Gather your
                 <br />
@@ -355,11 +387,18 @@ export function Game({
               <RoomSettings
                 settings={g}
                 difficulty={g.difficulty}
-                disabled={!host || !!busy}
+                disabled={!host || !!busy || !!g.series?.rounds.length}
                 onChange={(s, d) =>
                   void action("settings", { ...s, difficulty: d })
                 }
               />
+              {g.series && (
+                <p className="help-text">
+                  Your profiles, series wins, and room settings are retained.
+                  Every human must ready up again; settings stay fixed until
+                  this rivalry ends.
+                </p>
+              )}
               <div className="briefing">
                 <ShieldAlert size={21} />
                 <div>
@@ -438,18 +477,161 @@ export function Game({
               <p className="help-text">
                 {g.wrongCount} incorrect submissions · {g.hintCount} hints used
               </p>
+              <div
+                className="personal-recap"
+                aria-label={race ? "Your round recap" : "Team round recap"}
+              >
+                <div>
+                  <span className="micro">ANSWER ACCURACY</span>
+                  <strong>
+                    {g.accuracy === null
+                      ? "—"
+                      : `${Math.round(g.accuracy * 100)}%`}
+                  </strong>
+                  <small>
+                    {g.correctCount} correct · {g.wrongCount} incorrect
+                  </small>
+                </div>
+                <div>
+                  <span className="micro">TIME IN LAB</span>
+                  <strong>
+                    {g.elapsedSeconds === null
+                      ? "—"
+                      : formatTime(g.elapsedSeconds)}
+                  </strong>
+                  <small>Includes summaries and detention</small>
+                </div>
+                <div>
+                  <span className="micro">BEST STREAK</span>
+                  <strong>{g.bestStreak}</strong>
+                  <small>Consecutive correct answers</small>
+                </div>
+              </div>
+              {race && g.matchComplete && (
+                <div className="round-podium" aria-label="Round escape podium">
+                  <h3>Round podium</h3>
+                  {g.leaderboard.some((p) => p.place !== null) ? (
+                    <ol>
+                      {g.leaderboard
+                        .filter((p) => p.place !== null)
+                        .slice(0, 3)
+                        .map((p) => {
+                          const racer = g.players.find(
+                            (x) => x.id === p.playerId,
+                          );
+                          return (
+                            <li key={p.playerId}>
+                              <strong>#{p.place}</strong>
+                              <span>
+                                {racer?.name}{" "}
+                                {racer?.kind === "bot" && (
+                                  <small className="bot-badge">BOT</small>
+                                )}
+                              </span>
+                              <small>{p.score.toLocaleString()} pts</small>
+                            </li>
+                          );
+                        })}
+                    </ol>
+                  ) : (
+                    <p className="muted">
+                      No racer escaped this round. Try a lower time pressure for
+                      the rematch.
+                    </p>
+                  )}
+                </div>
+              )}
+              {!g.series?.complete && (
+                <div className="rematch-panel">
+                  <h3>
+                    {g.series
+                      ? `Continue to round ${Math.min(3, g.series.round + 1)}`
+                      : "Another experiment?"}
+                  </h3>
+                  <p>
+                    {g.rematchVotes.length}/{humanPlayers.length} humans voted.
+                    All remaining humans must vote, with at least two connected
+                    players. You will return to the lobby and ready up again.
+                  </p>
+                  <button
+                    className={
+                      g.rematchVotes.includes(session.playerId)
+                        ? "secondary-button"
+                        : "primary-button"
+                    }
+                    aria-pressed={g.rematchVotes.includes(session.playerId)}
+                    disabled={
+                      !!busy ||
+                      !connected ||
+                      !g.matchComplete ||
+                      humanPlayers.length < 2
+                    }
+                    onClick={() =>
+                      void action("rematch", {
+                        ready: !g.rematchVotes.includes(session.playerId),
+                      })
+                    }
+                  >
+                    <RotateCcw size={17} />
+                    {g.rematchVotes.includes(session.playerId)
+                      ? "Withdraw rematch vote"
+                      : g.series
+                        ? "Vote for next round"
+                        : "Vote for rematch"}
+                  </button>
+                  {!g.matchComplete && (
+                    <p className="help-text">
+                      Other racers are still playing. Voting opens when this
+                      match is complete.
+                    </p>
+                  )}
+                </div>
+              )}
               <div className="result-actions">
-                {host ? (
+                {host && g.series && !g.series.complete ? (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button
+                        className="secondary-button"
+                        disabled={!!busy || !g.matchComplete}
+                      >
+                        End rivalry
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="rules-modal">
+                      <AlertDialogTitle>End this rivalry?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Return everyone to the lobby without declaring a series
+                        winner. Profiles remain, and you can change room
+                        settings.
+                      </AlertDialogDescription>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Keep rivalry</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => void action("endSeries")}
+                        >
+                          End rivalry
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                ) : host ? (
                   <button
                     className="primary-button"
                     disabled={!!busy || !g.matchComplete}
                     onClick={() => void action("restart")}
                   >
                     <RotateCcw size={17} />
-                    Return room to lobby
+                    {g.series?.complete
+                      ? "Set up a new rivalry"
+                      : "Return room to lobby"}
                   </button>
                 ) : (
-                  <p className="muted">Your host can restart the experiment.</p>
+                  <p className="muted">
+                    {g.series && !g.series.complete
+                      ? "Vote together to continue this rivalry."
+                      : "Your host can return everyone to the lobby."}
+                  </p>
                 )}
                 <button
                   className="secondary-button"
@@ -642,7 +824,9 @@ export function Game({
                   ) : (
                     <>
                       <form className="answer-form" onSubmit={submit}>
-                        <label className="answer-label" htmlFor="answer">Your answer</label>
+                        <label className="answer-label" htmlFor="answer">
+                          Your answer
+                        </label>
                         <input
                           id="answer"
                           value={drafts[inputKey] ?? ""}
