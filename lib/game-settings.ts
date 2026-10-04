@@ -6,6 +6,7 @@ export interface GameSettings {
   botSkill: Skill;
   fillBots: boolean;
   freshPuzzles: boolean;
+  bestOfThree: boolean;
 }
 export const NEW_ROOM_SETTINGS: GameSettings = {
   mode: "race",
@@ -13,6 +14,7 @@ export const NEW_ROOM_SETTINGS: GameSettings = {
   botSkill: "medium",
   fillBots: true,
   freshPuzzles: true,
+  bestOfThree: false,
 };
 export const GAME_RULES = {
   easy: {
@@ -46,8 +48,11 @@ export function validateSettings(
     !["easy", "medium", "hard"].includes(s.gameDifficulty) ||
     !["easy", "medium", "hard"].includes(s.botSkill) ||
     typeof s.fillBots !== "boolean" ||
-    typeof s.freshPuzzles !== "boolean"
+    typeof s.freshPuzzles !== "boolean" ||
+    typeof s.bestOfThree !== "boolean"
   )
     throw new Error("Choose valid room settings.");
+  if (s.bestOfThree && s.mode !== "race")
+    throw new Error("Best-of-three rivalries require Race mode.");
   return s;
 }

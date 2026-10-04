@@ -23,7 +23,11 @@ export function RoomSettings({
           <select
             value={settings.mode}
             onChange={(e) =>
-              change({ mode: e.target.value as GameSettings["mode"] })
+              change({
+                mode: e.target.value as GameSettings["mode"],
+                bestOfThree:
+                  e.target.value === "race" ? settings.bestOfThree : false,
+              })
             }
           >
             <option value="race">Race · first escape wins</option>
@@ -83,14 +87,29 @@ export function RoomSettings({
         </label>
       )}
       <label className="preference-toggle">
-        <input type="checkbox" checked={settings.freshPuzzles} onChange={e=>change({freshPuzzles:e.target.checked})} />
+        <input
+          type="checkbox"
+          checked={settings.freshPuzzles}
+          onChange={(e) => change({ freshPuzzles: e.target.checked })}
+        />
         Fresh numbers each round
       </label>
+      {settings.mode === "race" && (
+        <label className="preference-toggle">
+          <input
+            type="checkbox"
+            checked={settings.bestOfThree}
+            onChange={(e) => change({ bestOfThree: e.target.checked })}
+          />
+          Best-of-three rivalry · first to two wins
+        </label>
+      )}
       <p className="help-text">
         {settings.mode === "race"
           ? "Same questions. Your own timer, locks, hints, and detention. Two ready humans are required; bots fill up to eight seats."
           : "Human teammates share locks, time, hints, score, and detention."}{" "}
-        Mathematics controls question level; time pressure controls the clock. Fresh numbers vary selected arithmetic, fractions, and algebra locks.
+        Mathematics controls question level; time pressure controls the clock.
+        Fresh numbers vary selected arithmetic, fractions, and algebra locks.
       </p>
     </fieldset>
   );

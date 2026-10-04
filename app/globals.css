@@ -2172,3 +2172,28 @@ html[data-reduce-motion=true] *, html[data-reduce-motion=true] *::before, html[d
 }
 @media(prefers-reduced-motion:reduce) { .lock-opening .lock-symbol { animation:none; } }
 [data-reduce-motion="true"] .lock-opening .lock-symbol { animation:none; }
+
+.series-scoreboard { margin:20px 0; padding:16px 20px; border:1px solid var(--primary); border-radius:16px; background:#20231d; }
+.series-scoreboard>summary { display:flex; flex-wrap:wrap; align-items:center; gap:10px; min-height:44px; cursor:pointer; color:var(--primary); font-weight:700; }
+.series-scoreboard>summary>small { margin-left:auto; color:var(--muted-foreground); font-weight:400; }
+.series-standings { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px 24px; list-style:none; padding:0; margin:16px 0; }
+.series-standings li { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid #ffffff18; min-width:0; }
+.series-standings li>span { overflow-wrap:anywhere; }
+.series-standings li>strong { flex-shrink:0; color:var(--primary); }
+.series-standings small { font-weight:400; }
+.series-result { color:var(--success); font-weight:700; }
+.series-history { color:var(--muted-foreground); font-size:14px; line-height:1.6; }
+.personal-recap { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin:24px 0; }
+.personal-recap>div { display:flex; flex-direction:column; gap:8px; padding:16px; background:#20251f; border-radius:12px; }
+.personal-recap strong { font-size:28px; color:var(--primary); }
+.personal-recap small { color:var(--muted-foreground); font-size:12px; }
+.round-podium, .rematch-panel { margin:24px 0; padding:20px; border:1px solid #ffffff20; border-radius:14px; }
+.round-podium h3, .rematch-panel h3 { margin:0 0 12px; }
+.round-podium ol { list-style:none; padding:0; margin:0; display:grid; gap:12px; }
+.round-podium li { display:flex; align-items:center; flex-wrap:wrap; gap:12px; min-height:44px; }
+.round-podium li>strong { color:var(--primary); font-size:24px; }
+.round-podium li>small { margin-left:auto; color:var(--muted-foreground); }
+.rematch-panel p { font-size:14px; color:var(--muted-foreground); line-height:1.6; margin-bottom:16px; }
+@media(max-width:680px) { .series-standings { grid-template-columns:1fr; } .personal-recap { grid-template-columns:1fr; } .personal-recap>div { flex-direction:row; flex-wrap:wrap; align-items:center; justify-content:space-between; } .personal-recap small { flex-basis:100%; } }
+
+.answer-form input { flex:1; }

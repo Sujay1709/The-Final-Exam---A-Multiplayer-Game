@@ -212,3 +212,27 @@ Correct answers show lock-opening feedback and a streak badge. Three consecutive
 New rooms enable **Fresh numbers each round**. Selected arithmetic, fraction, percentage, and algebra locks use bounded seeded templates. Every seat receives the same stored question set; reconnecting cannot regenerate it. Answers and explanations stay on the server until each player's rules allow disclosure. A rematch changes the numbers, while Junior/Senior topics and all time-pressure rules stay the same. Turn the toggle off for the original authored bank; legacy rooms keep their existing questions. Detention questions retain their original prerequisite/code rules.
 
 Run `node tests/fresh-http.mjs` against your local production server to check generated questions through the real multiplayer API.
+
+### Best-of-three rivalries and rematches
+
+In Race, enable **Best-of-three rivalry** in Room settings before starting. The first successful escape earns one round win. The series ends when a racer reaches two wins or after three completed rounds. If several racers tie for the most wins after three rounds, the series is a draw; a round with no escape awards no win. Bots can win rounds and are always labelled BOT.
+
+After every racer finishes or leaves, all remaining humans can vote for the next round. At least two connected humans must vote; the room then returns to the lobby, and everyone must ready up again. Profiles, settings, and series wins persist. Settings and roster additions are locked between rivalry rounds, while lobby alias/avatar edits remain available. The host can explicitly end an unfinished rivalry after a round, or set up a new rivalry after completion. Standard Race and Co-op also offer consensus rematch votes.
+
+Results show the round podium and your answer accuracy, elapsed time, and best streak. Accuracy includes all accepted main/detention submissions; hints and malformed answers are excluded. Time includes room summaries and detention, and freezes when you finish. Co-op displays the team's aggregate recap. Series records live only in the room and expire with its existing 24-hour lifetime.
+
+Run all checks with Node 24:
+
+```sh
+npm test
+npm run typecheck
+npm run build
+node scripts/check-vercel-build.mjs
+GAME_SQLITE_PATH=/tmp/final-exam-engagement-test.sqlite npm start
+```
+
+In another terminal, run `node tests/integration.mjs`, `node tests/profiles-http.mjs`, `node tests/race-http.mjs`, `node tests/fresh-http.mjs`, and `node tests/series-http.mjs`. The series HTTP test plays two full rounds and takes about a minute. Use `GAME_TEST_URL=http://localhost:5174` if your test server uses another port. New-room defaults remain Race/Junior/Medium with bot filling on; fresh numbers are on and rivalries are opt-in.
+
+Feature branches: `codex/solve-feedback` → `codex/fresh-puzzles` → `codex/rivalry-series`. The final branch contains all three improvements and the Vercel compatibility fix. Keep their dependent PRs open until reviewed.
+
+Portfolio explanation: a server-authoritative game generates fair deterministic challenges, protects private progress, and coordinates replay-safe multiplayer series. Retention improvement is a hypothesis to measure through playtesting, not a claimed result.

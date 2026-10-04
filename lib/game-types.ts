@@ -54,7 +54,30 @@ export interface ReviewPuzzle {
   solution: string;
   room: string;
 }
+export interface SeriesRound {
+  run: number;
+  round: number;
+  winnerId: string | null;
+  winnerName: string | null;
+}
+export interface SeriesStanding {
+  playerId: string;
+  name: string;
+  kind: "human" | "bot";
+  wins: number;
+}
+export interface SeriesView {
+  round: number;
+  complete: boolean;
+  championId: string | null;
+  standings: SeriesStanding[];
+  rounds: SeriesRound[];
+}
 export interface Snapshot extends GameSettings {
+  series: SeriesView | null;
+  rematchVotes: string[];
+  accuracy: number | null;
+  elapsedSeconds: number | null;
   matchComplete: boolean;
   winnerId: string | null;
   leaderboard: PublicProgress[];
