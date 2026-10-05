@@ -61,6 +61,23 @@ const SCENES = [
   },
 ] as const;
 
+// Each 12-second chapter has its own harmony and eight-beat mystery motif.
+// Frequencies are in hertz; a null leaves space for the story dialogue.
+const STORY_SCORE = [
+  {
+    chord: [146.83, 174.61, 220], // D minor: the missing credit
+    melody: [293.66, null, 349.23, null, 329.63, null, 261.63, null],
+  },
+  {
+    chord: [116.54, 146.83, 174.61], // B-flat: the grudge
+    melody: [233.08, null, 293.66, null, 349.23, 329.63, 293.66, null],
+  },
+  {
+    chord: [110, 130.81, 164.81], // A minor: the experiment
+    melody: [220, null, 261.63, 329.63, 415.3, null, 392, 329.63],
+  },
+] as const;
+
 // Each chapter receives twelve visible, unpaused seconds. No forward/skip path.
 export function Prologue({
   open,
@@ -132,35 +149,71 @@ export function Prologue({
     }, 100);
     return () => clearInterval(tick);
   }, [open, started, playing, visible, scene]);
-  // A local synthesized soundtrack avoids downloads, licensing, and external audio services.
+  // Web Audio keeps the score local and lets pause, mute, and tab visibility stop it.
   useEffect(() => {
     const ctx = audio.current;
     if (!ctx || !sound || !playing || !visible || !open) return;
+    const score = STORY_SCORE[scene];
     const master = ctx.createGain();
-    master.gain.value = 0.035;
+    master.gain.setValueAtTime(0, ctx.currentTime);
+    master.gain.linearRampToValueAtTime(0.055 + scene * 0.008, ctx.currentTime + 0.35);
     master.connect(ctx.destination);
-    const roots = [130.81, 110, 146.83];
-    const voices = [1, 1.5, 2.01].map((ratio, i) => {
-      const o = ctx.createOscillator(),
-        v = ctx.createGain();
-      o.type = i === 2 ? "sine" : "triangle";
-      o.frequency.value = roots[scene] * ratio;
-      v.gain.value = i === 0 ? 0.5 : 0.2;
-      o.connect(v);
-      v.connect(master);
-      o.start();
-      return o;
+    const filter = ctx.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.value = 650 + scene * 180;
+    filter.connect(master);
+
+    const pad = score.chord.map((frequency, i) => {
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      oscillator.type = i === 0 ? "sine" : "triangle";
+      oscillator.frequency.value = frequency;
+      gain.gain.value = i === 0 ? 0.28 : 0.12;
+      oscillator.connect(gain);
+      gain.connect(filter);
+      oscillator.start();
+      return oscillator;
     });
-    const pulse = setInterval(() => {
-      master.gain.setTargetAtTime(0.015, ctx.currentTime, 0.15);
-      master.gain.setTargetAtTime(0.035, ctx.currentTime + 0.5, 0.3);
-    }, 1500);
+
+    function playNote(frequency: number, length: number, volume: number) {
+      if (!ctx) return;
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const now = ctx.currentTime;
+      oscillator.type = "triangle";
+      oscillator.frequency.value = frequency;
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.exponentialRampToValueAtTime(volume, now + 0.025);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + length);
+      oscillator.connect(gain);
+      gain.connect(filter);
+      oscillator.onended = () => {
+        oscillator.disconnect();
+        gain.disconnect();
+      };
+      oscillator.start(now);
+      oscillator.stop(now + length);
+    }
+
+    let lastBeat = -1;
+    const playBeat = () => {
+      const beat = Math.floor(elapsedRef.current / 500);
+      if (beat === lastBeat) return;
+      lastBeat = beat;
+      // A low heartbeat and sparse notes build tension without covering captions.
+      playNote(score.chord[0] / 2, 0.18, beat % 4 === 0 ? 0.22 : 0.1);
+      const note = score.melody[beat % score.melody.length];
+      if (note !== null) playNote(note, 0.65, 0.18);
+    };
+    playBeat();
+    const pulse = window.setInterval(playBeat, 100);
     return () => {
-      clearInterval(pulse);
-      voices.forEach((o) => {
-        o.stop();
-        o.disconnect();
+      window.clearInterval(pulse);
+      pad.forEach((oscillator) => {
+        oscillator.stop();
+        oscillator.disconnect();
       });
+      filter.disconnect();
       master.disconnect();
     };
   }, [scene, sound, playing, visible, open]);
