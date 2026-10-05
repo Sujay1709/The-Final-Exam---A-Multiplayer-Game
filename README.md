@@ -113,8 +113,7 @@ Requires **Node.js 24.x** and npm. The deployment target is now native Next.js, 
 ```sh
 cd "/Users/sujaygopal/Desktop/MyProjects/The-Final-Exam---A-Multiplayer-Game"
 nvm use 24
-# Complete game plus Vercel compatibility while PRs remain open:
-git switch codex/vercel-compat
+git switch main
 npm run install:ci
 npm run dev
 ```
@@ -127,11 +126,11 @@ Browser storage holds the device’s profile/preferences and current session cre
 
 ## Deploy on Vercel
 
-See [the deployment guide](docs/vercel-deployment.md) for database setup and project settings. Deploy `codex/vercel-compat` while the feature PRs remain open. GitHub `main` is unchanged.
+See [the deployment guide](docs/vercel-deployment.md) for database setup and project settings. Vercel Production builds the complete game from GitHub `main`.
 
 The prior `npm run build` invoked Vinext and wrote Cloudflare output under `dist/`; Vercel's Next.js preset expected `.next/routes-manifest.json`. The build now runs `next build`, and `vercel.json` pins the framework, install command, build command, and `.next` output. Do not restore the Vinext build command or choose `dist` as Vercel's output directory.
 
-Set **both** `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` as server-only Vercel environment variables. Initialize the remote database once with `drizzle/0000_spotty_toad_men.sql`, then redeploy. Builds do not need database credentials; multiplayer requests do. Hosted requests fail with 503 when the database is unconfigured rather than writing separate ephemeral files on different server instances.
+Set **both** `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` as server-only Vercel environment variables, then redeploy. The first multiplayer request creates the `rooms` table if needed. Builds do not need database credentials; multiplayer requests do. Hosted requests fail with 503 when the database is unconfigured rather than writing separate ephemeral files on different server instances.
 
 The former Vinext/Sites tooling remains in the repository for historical reference; the standard npm commands and game API now target Next.js/Node on Vercel. Returning to Sites requires its original runtime adapter. The previous `codex/race-bots` branch remains available as the Cloudflare version.
 
@@ -173,18 +172,18 @@ For manual UI checks: try 375/390px phone widths and desktop; customize then rel
 
 ## Debugging and limitations
 
-- Database unavailable: inspect the server log; on Vercel check both Turso variables and the initialized `rooms` table. For local play leave the remote variables unset. See the deployment guide.
+- Database unavailable: inspect the server log; on Vercel check both Turso variables and the database connection. The first request creates the `rooms` table. For local play leave the remote variables unset. See the deployment guide.
 - Cannot start: every human must be connected and ready. Race with bots permits one human; Co-op and Race without bots require two. The countdown begins automatically. An upgraded lobby asks humans to ready up again.
 - Phone cannot connect: use the computer’s LAN IP, same network, awake host, and allow port 5173 through the firewall/router.
 - Stale-phase error: review the new room before resubmitting; the prior answer was not accepted into a different room.
 - Silent audio: press Start story or a sound button; browsers require a gesture. Check the mute preference.
 - No 3D: use the preserved portrait; WebGL may be unavailable. Clear hot-reload hook errors by refreshing.
 
-The fixed bank contains 30 main puzzles and six detention steps. Replays repeat questions. Bots simulate skill; they do not learn. Tests validate room-level correctness, not large-scale load. There are no app accounts, global leaderboard, or ML inference. Optional fresh-number templates vary selected puzzles; the authored bank remains available. Public deployment still benefits from abuse protection and classroom testing. The remote database adapter is tested locally through its SQL contract; live cloud credentials and a Vercel deployment are required to verify the hosted environment. GitHub source upload is separate from publishing; this delivery leaves main and hosted publishing unchanged.
+The fixed bank contains 30 main puzzles and six detention steps. Replays repeat questions. Bots simulate skill; they do not learn. Tests validate room-level correctness, not large-scale load. There are no app accounts, global leaderboard, or ML inference. Optional fresh-number templates vary selected puzzles; the authored bank remains available. Public deployment still benefits from abuse protection and classroom testing. The remote database adapter is tested locally through its SQL contract; hosted room creation should be verified after connecting Turso.
 
 ## Feature PRs and future updates
 
-The current delivery is stacked and remains open for review:
+These feature branches preserve the development history; their work is included in `main`:
 
 | Branch | PR target | Responsibility |
 | --- | --- | --- |
@@ -193,7 +192,7 @@ The current delivery is stacked and remains open for review:
 | `codex/race-bots` | `codex/player-profiles` | Race, pressure/skill settings, deterministic bots, private progress |
 | `codex/vercel-compat` | `codex/race-bots` | Native Next.js output, portable SQL storage, Vercel configuration and checks |
 
-The final branch contains the complete preview. Merge the dependencies in order when approved, then retarget dependent PRs as needed. Existing baseline feature branches and Git history are retained. Branches isolate change history; they do not prohibit changes to shared files. Keep future changes focused, test them, and open a PR. See [CONTRIBUTING.md](CONTRIBUTING.md).
+The latest game and deployment fixes are on `main`. Existing feature branches and Git history are retained. Keep future changes focused, test them, and open a PR. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Portfolio explanation
 

@@ -8,9 +8,9 @@ Changing the output directory alone would not fix the game API: it also imported
 
 Official references: [Next.js on Vercel](https://vercel.com/docs/frameworks/full-stack/nextjs), [Vercel project configuration](https://vercel.com/docs/project-configuration/vercel-json), and [Turso TypeScript SDK](https://docs.turso.tech/sdk/ts/reference).
 
-## 1. Use the compatibility branch
+## 1. Deploy the complete game from main
 
-Deploy **`codex/lab-entry`** for the complete game and all three engagement improvements. The underlying compatibility fix is on `codex/vercel-compat`. The earlier feature PRs remain open and GitHub `main` has not been changed. A deployment from old `main` or `codex/race-bots` will still use the previous build/runtime.
+Vercel Production tracks GitHub **`main`**, which contains the complete game and the Next.js compatibility fix. Preview branches remain available for testing future changes.
 
 ## 2. Create durable multiplayer storage
 
@@ -20,13 +20,11 @@ With the [official Turso CLI](https://docs.turso.tech/cli/db/create), signed int
 
 ```sh
 turso db create final-exam
-# Run the existing schema once against a NEW remote database:
-turso db shell final-exam < drizzle/0000_spotty_toad_men.sql
 turso db show final-exam
 turso db tokens create final-exam
 ```
 
-The last command prints a secret. Copy it directly to Vercel's environment settings; do not commit it or share it in chat. If the `rooms` table already exists, skip the schema command. Use different databases for Production and Preview when you want to isolate real matches from preview testing. No current local sessions are automatically uploaded.
+The last command prints a secret. Copy it directly to Vercel's environment settings; do not commit it or share it in chat. The first hosted game request creates the `rooms` table if needed, without resetting existing rooms. Use different databases for Production and Preview when you want to isolate real matches from preview testing. No current local sessions are automatically uploaded.
 
 ## 3. Set Vercel configuration
 
@@ -38,7 +36,7 @@ The last command prints a secret. Copy it directly to Vercel's environment setti
 | Install Command | `npm run install:ci` |
 | Build Command | `npm run build` |
 | Output Directory | `.next` (or Next.js default; remove any old `dist` override) |
-| Branch for this preview | `codex/lab-entry` |
+| Production branch | `main` |
 
 `vercel.json` commits the framework/build/install/output settings. If the dashboard still has old custom values, clear them or match the table.
 
@@ -96,7 +94,7 @@ These tests create rooms. Do not point them at Production unless you intend to c
 ## Debugging
 
 - **Missing routes manifest:** confirm the deployed branch and build command. A correct build logs `Next.js`, creates `.next/routes-manifest.json`, and lists `/api/game` as dynamic. Do not create an empty manifest or rename `dist` to `.next`.
-- **Homepage loads, Create room returns 503:** inspect Vercel function logs for missing Turso variables, an invalid/expired token, or a missing `rooms` table. Correct the configuration and redeploy.
+- **Homepage loads, Create room returns 503:** inspect Vercel function logs for missing Turso variables, an invalid/expired token, or a failed first-request table initialization. Correct the configuration and redeploy.
 - **Native SQLite warning locally:** Node 24 labels `node:sqlite` experimental. Hosted games use the remote web client and never open a local SQLite file.
 - **Port 5173 in use:** stop the other preview with Ctrl+C or pass `--port 5174`. Set `GAME_TEST_URL=http://localhost:5174` for tests against that port.
 
