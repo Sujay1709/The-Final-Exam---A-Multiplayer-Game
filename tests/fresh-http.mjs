@@ -1,3 +1,4 @@
+import { waitForLab } from "./http-helpers.mjs";
 import assert from "node:assert/strict";
 const origin=process.env.GAME_TEST_URL??"http://localhost:5173";
 async function post(a,status=200) {
@@ -9,7 +10,7 @@ assert.equal(h.game.freshPuzzles,true);
 const b=await post({op:"join",code:h.session.code,name:"Fresh Guest"});
 await post({op:"settings",...b.session,freshPuzzles:false},403);
 await Promise.all([h,b].map(p=>post({op:"ready",...p.session,ready:true})));
-const start=await post({op:"start",...h.session});
+const start=await waitForLab(() => post({op:"state",...h.session}));
 const other=await post({op:"state",...b.session});
 assert.deepEqual(start.game.puzzles,other.game.puzzles);
 const q=start.game.puzzles.find(q=>q.id==="j0a");

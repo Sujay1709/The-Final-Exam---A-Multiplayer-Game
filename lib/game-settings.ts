@@ -16,6 +16,10 @@ export const NEW_ROOM_SETTINGS: GameSettings = {
   freshPuzzles: true,
   bestOfThree: false,
 };
+export const LAB_ENTRY_SECONDS = 10;
+export const minimumHumans = (
+  settings: Pick<GameSettings, "mode" | "fillBots">,
+) => (settings.mode === "race" && settings.fillBots ? 1 : 2);
 export const GAME_RULES = {
   easy: {
     main: 300,

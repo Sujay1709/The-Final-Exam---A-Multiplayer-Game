@@ -2197,3 +2197,84 @@ html[data-reduce-motion=true] *, html[data-reduce-motion=true] *::before, html[d
 @media(max-width:680px) { .series-standings { grid-template-columns:1fr; } .personal-recap { grid-template-columns:1fr; } .personal-recap>div { flex-direction:row; flex-wrap:wrap; align-items:center; justify-content:space-between; } .personal-recap small { flex-basis:100%; } }
 
 .answer-form input { flex:1; }
+
+/* The laboratory artwork is decorative; discoveries remain native controls. */
+.play-layout.is-loading { display:block; }
+.is-loading .main-board { padding:0; }
+.lobby-auto-start { display:flex; align-items:center; gap:10px; max-width:330px; color:var(--muted-foreground); font-size:14px; line-height:1.6; }
+.lab-entry { min-height:660px; position:relative; isolation:isolate; overflow:hidden; border-radius:8px; }
+.entry-art { position:absolute; inset:0; z-index:-2; background:url('/lab/abandoned-laboratory.webp') center/cover; }
+.lab-entry::before { content:""; position:absolute; inset:0; z-index:-1; background:linear-gradient(90deg,rgba(9,12,10,.98),rgba(9,12,10,.87) 55%,rgba(9,12,10,.5)); }
+.entry-content { max-width:800px; padding:54px 60px; }
+.entry-content h2 { font-family:"Barlow Condensed",sans-serif; font-size:clamp(44px,6vw,74px); font-weight:700; line-height:1; margin:18px 0; }
+.entry-content h2 span { display:block; color:var(--orange); }
+.entry-content>p { color:#c6c9bf; line-height:1.6; }
+.entry-countdown { position:relative; width:160px; height:160px; margin:26px 0 18px; display:grid; place-content:center; text-align:center; }
+.entry-countdown svg { position:absolute; inset:0; width:100%; height:100%; transform:rotate(-90deg); fill:none; stroke:#454638; stroke-width:3; }
+.entry-countdown .entry-ring { stroke:var(--orange); stroke-width:5; transition:stroke-dashoffset .3s linear; }
+.entry-countdown strong { font-family:"Space Mono",monospace; font-size:60px; line-height:1.1; color:var(--orange); }
+.entry-countdown .micro { margin-top:7px; font-size:9px; letter-spacing:.03em; }
+.entry-status { font-weight:600; min-height:26px; }
+.entry-steps { list-style:none; padding:0; margin:18px 0 24px; display:grid; gap:8px; }
+.entry-steps li { display:flex; align-items:center; gap:12px; color:#a3aa9c; padding:10px 0; border-bottom:1px solid #454638; }
+.entry-steps li.active { color:var(--orange); }
+.entry-steps li.done { color:var(--success); }
+.entry-steps li small { margin-left:auto; font-family:"Space Mono",monospace; font-size:10px; }
+.entry-content .entry-note { font-size:13px; color:#c6c9bf; max-width:480px; }
+.escape-lab { margin:24px 0; }
+.lab-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.lab-heading h3 { margin:6px 0 0; font-family:"Barlow Condensed",sans-serif; font-size:30px; line-height:1.1; }
+.lab-instructions { font-size:14px; line-height:1.6; color:var(--muted-foreground); margin:14px 0; }
+.scan-button { min-height:44px; font-size:13px; padding:10px 14px; flex-shrink:0; }
+.scan-button[aria-pressed=true] { color:var(--orange); border-color:var(--orange); }
+.lab-scene { position:relative; isolation:isolate; aspect-ratio:1672/941; width:100%; border:1px solid #775439; border-radius:8px; overflow:hidden; background:#191c17; }
+.lab-scene>img { width:100%; height:100%; display:block; object-fit:cover; }
+.lab-vignette { position:absolute; inset:0; background:linear-gradient(180deg,rgba(0,0,0,.4),transparent 20%,transparent 75%,rgba(0,0,0,.65)); pointer-events:none; }
+.lab-location { position:absolute; top:14px; left:16px; color:#ffe1c4; background:rgba(15,18,15,.8); border-radius:4px; padding:7px 9px; font-size:10px; }
+.lab-exit { position:absolute; transform:translate(-50%,-50%); display:flex; align-items:center; gap:7px; color:#fff0db; background:rgba(17,19,16,.92); border:1px solid #b9804d; border-radius:4px; padding:8px; font-family:"Space Mono",monospace; font-size:10px; pointer-events:none; }
+.lab-hotspot { position:absolute; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; width:60px; min-height:60px; border:none; color:#fff2df; background:transparent; touch-action:manipulation; }
+.hotspot-icon { width:48px; height:48px; flex-shrink:0; display:grid; place-items:center; background:rgba(18,20,17,.8); border:1px dashed #d3b18c; border-radius:50%; box-shadow:0 2px 16px rgba(0,0,0,.5); transition:transform .15s,background .15s,border-color .15s; }
+.hotspot-caption { opacity:0; pointer-events:none; position:absolute; top:53px; width:max-content; max-width:135px; background:rgba(15,18,15,.97); padding:5px 8px; border:1px solid #b47b46; border-radius:4px; color:#fff2df; font-size:11px; line-height:1.4; text-align:center; }
+.lab-hotspot:hover .hotspot-caption,.lab-hotspot:focus-visible .hotspot-caption,.highlight-objects .hotspot-caption,.lab-hotspot.discovered .hotspot-caption { opacity:1; }
+.lab-hotspot:hover .hotspot-icon,.lab-hotspot:focus-visible .hotspot-icon,.lab-hotspot.selected .hotspot-icon,.highlight-objects .hotspot-icon { border:2px solid var(--orange); background:#241c12; color:var(--orange); }
+.lab-hotspot:active .hotspot-icon { transform:scale(.9); }
+.lab-hotspot:focus-visible { outline-offset:1px; border-radius:6px; z-index:3; }
+.lab-hotspot.solved .hotspot-icon { color:var(--success); border:2px solid var(--success); background:#172511; }
+.lab-hotspot:disabled { opacity:.65; }
+.lab-discoveries { position:absolute; bottom:14px; left:16px; display:flex; gap:8px; align-items:center; font-size:12px; padding:8px 10px; border:1px solid #775439; border-radius:4px; background:rgba(15,18,15,.95); }
+.lab-detention .lab-scene>img { filter:sepia(.15) saturate(.65); }
+.lab-detention .lab-location { color:var(--red); }
+.lab-object-list { margin-top:12px; border:1px solid var(--border); border-radius:5px; }
+.lab-object-list summary { padding:14px; min-height:48px; cursor:pointer; color:var(--foreground); font-size:14px; }
+.lab-object-list summary:focus-visible { outline:2px solid var(--orange); outline-offset:3px; }
+.lab-object-list>div { padding:0 12px 12px; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+.lab-object-button { display:flex; gap:10px; align-items:center; text-align:left; padding:12px; min-height:60px; border:1px solid var(--border); border-radius:4px; color:var(--foreground); background:var(--background); }
+.lab-object-button svg { flex-shrink:0; color:var(--orange); }
+.lab-object-button span { display:grid; gap:3px; }
+.lab-object-button strong { font-size:13px; }
+.lab-object-button small { font-size:12px; line-height:1.5; color:var(--muted-foreground); }
+.lab-object-button.solved svg { color:var(--success); }
+.lab-search-prompt { display:flex; justify-content:center; text-align:center; padding:20px 10px; margin:0; color:#c6c9bf; font-size:14px; line-height:1.6; }
+.puzzle-panel .puzzle-label { flex-wrap:wrap; gap:12px; }
+.puzzle-panel .puzzle-label .text-button { margin-left:auto; min-height:44px; padding:8px 0; }
+@media(max-width:680px) {
+ .lab-entry { min-height:650px; }
+ .entry-content { padding:32px 22px; }
+ .entry-steps li { flex-wrap:wrap; gap:8px; font-size:14px; }
+ .entry-steps li small { font-size:9px; }
+ .lab-heading { align-items:flex-start; flex-direction:column; gap:12px; }
+ .lab-heading h3 { font-size:28px; }
+ .lab-hotspot { width:48px; min-height:48px; height:48px; }
+ .lab-hotspot:nth-of-type(3) { left:73%!important; }
+ .lab-object-list>div { grid-template-columns:1fr; }
+ .lab-exit span { display:none; }
+ .lab-location { top:9px; left:9px; font-size:9px; }
+ .lab-discoveries { bottom:9px; left:9px; font-size:11px; padding:7px; }
+ .hotspot-caption { font-size:10px; max-width:82px; }
+ .lobby-auto-start { max-width:none; }
+}
+
+@keyframes lab-lock-open { 0% { transform:scale(.8); } 50% { transform:scale(1.15); } 100% { transform:scale(1); } }
+.lab-hotspot.lock-opening .hotspot-icon { animation:lab-lock-open .6s ease-out; }
+@media(prefers-reduced-motion:reduce) { .lab-hotspot.lock-opening .hotspot-icon { animation:none; } }
+[data-reduce-motion=true] .lab-hotspot.lock-opening .hotspot-icon { animation:none; }

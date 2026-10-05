@@ -8,9 +8,7 @@ import { remoteRoomStore } from "../db/remote.ts";
 // This fixture is not a claim that a live Turso account has been provisioned.
 test("remote web client preserves SQL types, atomic updates, expiry, and auth failures", async (t) => {
   const database = new DatabaseSync(":memory:");
-  database.exec(
-    "CREATE TABLE rooms (code TEXT PRIMARY KEY, state TEXT NOT NULL, version INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL)",
-  );
+  // Start empty so the first request also proves hosted schema initialization.
   const token = "fixture-only-token";
   let calls = 0;
   const server = createServer(async (request, response) => {

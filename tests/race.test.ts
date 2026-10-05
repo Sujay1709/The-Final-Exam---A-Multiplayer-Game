@@ -32,7 +32,8 @@ function race(fillBots = true) {
     p.ready = true;
     if (p.kind === "bot") p.rng = 42 + i;
   });
-  mutateGame(g, { op: "start", token: "h-token" }, T);
+  mutateGame(g, { op: "start", token: "h-token" }, T - 10000);
+  advanceClock(g, T);
   return g;
 }
 function submit(
@@ -71,7 +72,7 @@ test("race fills two humans plus six bots; human joins replace seats up to eight
   assert.equal(g.players.length, 8);
   assert.throws(
     () => mutateGame(g, { op: "start", token: "h-token" }, T),
-    /human/,
+    /ready/,
   );
   for (let i = 1; i < 8; i++) {
     joinGame(g, "Human" + i, defaultAvatar(i), "token" + i, "human" + i, T);
@@ -83,7 +84,8 @@ test("race fills two humans plus six bots; human joins replace seats up to eight
     /full/,
   );
   g.players.forEach((p) => (p.ready = true));
-  mutateGame(g, { op: "start", token: "h-token" }, T);
+  mutateGame(g, { op: "start", token: "h-token" }, T - 10000);
+  advanceClock(g, T);
   assert.ok(g.players.every((p) => p.progress?.deadline === T + 240000));
 });
 test("all pressure settings preserve scoring and apply exact wrong, hint, detention and recovery times", () => {
@@ -101,7 +103,8 @@ test("all pressure settings preserve scoring and apply exact wrong, hint, detent
     );
     joinGame(g, "Guest", defaultAvatar(), "b-token", "b", T);
     g.players.forEach((p) => (p.ready = true));
-    mutateGame(g, { op: "start", token: "h-token" }, T);
+    mutateGame(g, { op: "start", token: "h-token" }, T - 10000);
+    advanceClock(g, T);
     assert.equal(g.deadline, T + rules.main * 1000);
     submit(g, "h", "j0a", 0, T + 1000);
     assert.equal(g.deadline, T + (rules.main - rules.wrong) * 1000);
@@ -299,7 +302,8 @@ test("bot schedules match configured ranges and bots never acquire the host role
     );
     joinGame(g, "Guest", defaultAvatar(), "b-token", "b", T);
     g.players.forEach((p) => (p.ready = true));
-    mutateGame(g, { op: "start", token: "h-token" }, T);
+    mutateGame(g, { op: "start", token: "h-token" }, T - 10000);
+    advanceClock(g, T);
     for (const bot of g.players.filter((p) => p.kind === "bot"))
       assert.ok(
         bot.nextAttemptAt! >= T + BOT_RULES[skill].min * 1000 &&

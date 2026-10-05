@@ -1,6 +1,6 @@
 # The Final Exam — A Multiplayer Math Escape Room
 
-**The Professor’s Last Exam** is a browser game for **2–8 human players** joining from their own devices with a six-letter room code. Race to escape first, or cooperate to escape together. Professor Elias Voss has turned a college reunion into five rooms of school-level math, countdowns, and escalating detention.
+**The Professor’s Last Exam** is a browser game for **2–8 human players, or one human racing against bots** joining from their own devices with a six-letter room code. Race to escape first, or cooperate to escape together. Professor Elias Voss has turned a college reunion into five rooms of school-level math, countdowns, and escalating detention.
 
 > An old grudge. Five locked rooms. Your only way out? Do the math.
 
@@ -37,9 +37,11 @@ The original manga professor is the default interactive view. Mouse motion, touc
 1. Complete the opening story, then preview your character and edit your anonymous alias (1–20 characters).
 2. Create a room with mode, mathematics, time pressure, and optional bot settings; or join by code.
 3. Share the code or invitation link. Each human joins from their own browser/device. Humans joining the lobby replace bot seats.
-4. At least **two connected, ready humans** are required. The human host starts; bots never host.
-5. Choose a lock and submit its numerical answer. Fractions and equivalent decimals are accepted; omit units and equations. Invalid input has no penalty.
-6. Solve all three main locks to clear a room. Race advances automatically after a three-second summary. Co-op lets the host advance after the team reads the explanations.
+4. In **Race with bot filling enabled**, one connected human can race against seven bots. Co-op and Race without bots require at least two humans. Invite friends before readying up: humans replace bot seats until the countdown begins.
+5. When every human is connected and presses **I’m ready**, the server automatically starts a **10-second lab-loading countdown**. Watch Voss seal the doors, restore power, hide clues, and arm the locks. Puzzle timers and bots start only when the countdown ends.
+6. Search the **abandoned science laboratory**: tap the dusty notebook, chemical bottles, and broken terminal to reveal math clues. Use **Highlight objects** for free or expand **Search objects with labelled controls** for keyboard/touch access. Clue discovery survives reconnects; Race discoveries are private and Co-op discoveries are shared.
+7. Choose a lock and submit its numerical answer. Fractions and equivalent decimals are accepted; omit units and equations. Invalid input has no penalty.
+8. Solve all three main locks to clear a room. Race advances automatically after a three-second summary. Co-op lets the host advance after the team reads the explanations.
 
 **Race:** same questions for all racers, but only your submissions change your locks, clock, hints, score, and punishment. The first successful escape wins. Others continue until they escape, lose, or explicitly leave. Final results appear when everyone has finished. Your solved explanations remain available in **Your solved questions**; opponents’ hints and explanations are private.
 
@@ -53,7 +55,7 @@ The host can change lobby settings; a change resets human readiness so players a
 
 | Room                    | Theme                          | Junior examples                       | Senior examples                                 |
 | ----------------------- | ------------------------------ | ------------------------------------- | ----------------------------------------------- |
-| 1. The Locked Classroom | Arithmetic and patterns        | Order of operations, number sequences | Signed numbers, more involved patterns          |
+| 1. The Abandoned Laboratory | Arithmetic and patterns        | Order of operations, number sequences | Signed numbers, more involved patterns          |
 | 2. The Fraction Factory | Fractions, ratios, percentages | Fractions of amounts, discounts       | Fraction addition, successive percentages       |
 | 3. The Algebra Alarm    | Equations and powers           | One-step and two-step equations       | Linear equations, exponent rules, square roots  |
 | 4. The Geometry Trap    | Shapes and measurements        | Area, perimeter, triangle angles      | Pythagoras, circle area, a trigonometric ratio  |
@@ -92,7 +94,7 @@ Medium preserves the original approved scoring rules. Punishment belongs to each
 | Medium | 14–25 seconds | 75% |
 | Hard | 8–16 seconds | 90% |
 
-Bots are simulated opponents, not AI/ML models. The server samples seeded attempt delays and success/failure, then uses the same numerical answer validator and penalties as humans. BOT badges identify them. Delay and accuracy control simulated skill, separately from game time pressure. New Race rooms fill vacant seats by default: two humans produce six bots; eight humans produce none. Bot filling can be disabled.
+Bots are simulated opponents, not AI/ML models. The server samples seeded attempt delays and success/failure, then uses the same numerical answer validator and penalties as humans. BOT badges identify them. Delay and accuracy control simulated skill, separately from game time pressure. New Race rooms fill vacant seats by default: one human produces seven bots; two humans produce six bots; eight humans produce none. Bot filling can be disabled.
 
 Scheduled actions and deadlines are processed in chronological server time. Extra polling cannot accelerate bots or award duplicate points. If nobody sends requests, the server catches up from the original timestamps on the next authenticated request; reconnecting grants no extra time. A disconnected human’s timer continues; an explicit leave ends that racer’s participation. Departed racers remain in final results. All humans leaving stops the bots. A host absent for 30 seconds is replaced by a connected human.
 
@@ -111,8 +113,7 @@ Requires **Node.js 24.x** and npm. The deployment target is now native Next.js, 
 ```sh
 cd "/Users/sujaygopal/Desktop/MyProjects/The-Final-Exam---A-Multiplayer-Game"
 nvm use 24
-# Complete game plus Vercel compatibility while PRs remain open:
-git switch codex/vercel-compat
+git switch main
 npm run install:ci
 npm run dev
 ```
@@ -125,11 +126,11 @@ Browser storage holds the device’s profile/preferences and current session cre
 
 ## Deploy on Vercel
 
-See [the deployment guide](docs/vercel-deployment.md) for database setup and project settings. Deploy `codex/vercel-compat` while the feature PRs remain open. GitHub `main` is unchanged.
+See [the deployment guide](docs/vercel-deployment.md) for database setup and project settings. Vercel Production builds the complete game from GitHub `main`.
 
 The prior `npm run build` invoked Vinext and wrote Cloudflare output under `dist/`; Vercel's Next.js preset expected `.next/routes-manifest.json`. The build now runs `next build`, and `vercel.json` pins the framework, install command, build command, and `.next` output. Do not restore the Vinext build command or choose `dist` as Vercel's output directory.
 
-Set **both** `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` as server-only Vercel environment variables. Initialize the remote database once with `drizzle/0000_spotty_toad_men.sql`, then redeploy. Builds do not need database credentials; multiplayer requests do. Hosted requests fail with 503 when the database is unconfigured rather than writing separate ephemeral files on different server instances.
+Set **both** `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` as server-only Vercel environment variables, then redeploy. The first multiplayer request creates the `rooms` table if needed. Builds do not need database credentials; multiplayer requests do. Hosted requests fail with 503 when the database is unconfigured rather than writing separate ephemeral files on different server instances.
 
 The former Vinext/Sites tooling remains in the repository for historical reference; the standard npm commands and game API now target Next.js/Node on Vercel. Returning to Sites requires its original runtime adapter. The previous `codex/race-bots` branch remains available as the Cloudflare version.
 
@@ -171,18 +172,18 @@ For manual UI checks: try 375/390px phone widths and desktop; customize then rel
 
 ## Debugging and limitations
 
-- Database unavailable: inspect the server log; on Vercel check both Turso variables and the initialized `rooms` table. For local play leave the remote variables unset. See the deployment guide.
-- Cannot start: at least two connected humans must ready up; only the human host starts. Bots cannot satisfy the human minimum.
+- Database unavailable: inspect the server log; on Vercel check both Turso variables and the database connection. The first request creates the `rooms` table. For local play leave the remote variables unset. See the deployment guide.
+- Cannot start: every human must be connected and ready. Race with bots permits one human; Co-op and Race without bots require two. The countdown begins automatically. An upgraded lobby asks humans to ready up again.
 - Phone cannot connect: use the computer’s LAN IP, same network, awake host, and allow port 5173 through the firewall/router.
 - Stale-phase error: review the new room before resubmitting; the prior answer was not accepted into a different room.
 - Silent audio: press Start story or a sound button; browsers require a gesture. Check the mute preference.
 - No 3D: use the preserved portrait; WebGL may be unavailable. Clear hot-reload hook errors by refreshing.
 
-The fixed bank contains 30 main puzzles and six detention steps. Replays repeat questions. Bots simulate skill; they do not learn. Tests validate room-level correctness, not large-scale load. There are no app accounts, global leaderboard, random question generation, or ML inference. Public deployment still benefits from abuse protection and classroom testing. The remote database adapter is tested locally through its SQL contract; live cloud credentials and a Vercel deployment are required to verify the hosted environment. GitHub source upload is separate from publishing; this delivery leaves main and hosted publishing unchanged.
+The fixed bank contains 30 main puzzles and six detention steps. Replays repeat questions. Bots simulate skill; they do not learn. Tests validate room-level correctness, not large-scale load. There are no app accounts, global leaderboard, or ML inference. Optional fresh-number templates vary selected puzzles; the authored bank remains available. Public deployment still benefits from abuse protection and classroom testing. The remote database adapter is tested locally through its SQL contract; hosted room creation should be verified after connecting Turso.
 
 ## Feature PRs and future updates
 
-The current delivery is stacked and remains open for review:
+These feature branches preserve the development history; their work is included in `main`:
 
 | Branch | PR target | Responsibility |
 | --- | --- | --- |
@@ -191,7 +192,7 @@ The current delivery is stacked and remains open for review:
 | `codex/race-bots` | `codex/player-profiles` | Race, pressure/skill settings, deterministic bots, private progress |
 | `codex/vercel-compat` | `codex/race-bots` | Native Next.js output, portable SQL storage, Vercel configuration and checks |
 
-The final branch contains the complete preview. Merge the dependencies in order when approved, then retarget dependent PRs as needed. Existing baseline feature branches and Git history are retained. Branches isolate change history; they do not prohibit changes to shared files. Keep future changes focused, test them, and open a PR. See [CONTRIBUTING.md](CONTRIBUTING.md).
+The latest game and deployment fixes are on `main`. Existing feature branches and Git history are retained. Keep future changes focused, test them, and open a PR. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Portfolio explanation
 
@@ -217,7 +218,7 @@ Run `node tests/fresh-http.mjs` against your local production server to check ge
 
 In Race, enable **Best-of-three rivalry** in Room settings before starting. The first successful escape earns one round win. The series ends when a racer reaches two wins or after three completed rounds. If several racers tie for the most wins after three rounds, the series is a draw; a round with no escape awards no win. Bots can win rounds and are always labelled BOT.
 
-After every racer finishes or leaves, all remaining humans can vote for the next round. At least two connected humans must vote; the room then returns to the lobby, and everyone must ready up again. Profiles, settings, and series wins persist. Settings and roster additions are locked between rivalry rounds, while lobby alias/avatar edits remain available. The host can explicitly end an unfinished rivalry after a round, or set up a new rivalry after completion. Standard Race and Co-op also offer consensus rematch votes.
+After every racer finishes or leaves, all remaining humans can vote for the next round. Every remaining connected human must vote (one is sufficient in a bot-filled Race, otherwise at least two are needed); the room then returns to the lobby, and everyone must ready up again. Profiles, settings, and series wins persist. Settings and roster additions are locked between rivalry rounds, while lobby alias/avatar edits remain available. The host can explicitly end an unfinished rivalry after a round, or set up a new rivalry after completion. Standard Race and Co-op also offer consensus rematch votes.
 
 Results show the round podium and your answer accuracy, elapsed time, and best streak. Accuracy includes all accepted main/detention submissions; hints and malformed answers are excluded. Time includes room summaries and detention, and freezes when you finish. Co-op displays the team's aggregate recap. Series records live only in the room and expire with its existing 24-hour lifetime.
 
@@ -231,8 +232,17 @@ node scripts/check-vercel-build.mjs
 GAME_SQLITE_PATH=/tmp/final-exam-engagement-test.sqlite npm start
 ```
 
-In another terminal, run `node tests/integration.mjs`, `node tests/profiles-http.mjs`, `node tests/race-http.mjs`, `node tests/fresh-http.mjs`, and `node tests/series-http.mjs`. The series HTTP test plays two full rounds and takes about a minute. Use `GAME_TEST_URL=http://localhost:5174` if your test server uses another port. New-room defaults remain Race/Junior/Medium with bot filling on; fresh numbers are on and rivalries are opt-in.
+In another terminal, run `node tests/integration.mjs`, `node tests/profiles-http.mjs`, `node tests/race-http.mjs`, `node tests/fresh-http.mjs`, `node tests/series-http.mjs`, and `node tests/lab-http.mjs`. The series HTTP test plays two full rounds, including entry countdowns, and takes about 75 seconds. Use `GAME_TEST_URL=http://localhost:5174` if your test server uses another port. New-room defaults remain Race/Junior/Medium with bot filling on; fresh numbers are on and rivalries are opt-in.
 
-Feature branches: `codex/solve-feedback` → `codex/fresh-puzzles` → `codex/rivalry-series`. The final branch contains all three improvements and the Vercel compatibility fix. Keep their dependent PRs open until reviewed.
+Feature branches: `codex/solve-feedback` → `codex/fresh-puzzles` → `codex/rivalry-series` → `codex/lab-entry`. The final branch also includes the automatic lab-entry sequence and interactive laboratory. Keep their dependent PRs open until reviewed.
 
 Portfolio explanation: a server-authoritative game generates fair deterministic challenges, protects private progress, and coordinates replay-safe multiplayer series. Retention improvement is a hypothesis to measure through playtesting, not a claimed result.
+
+
+### Laboratory entry checks
+
+The lab scene uses original local WebP artwork with native button hotspots. It is an illustrated room, not a 3D environment. Mathematics and scoring are unchanged. The startup progress is part of the story; actual server/network errors are shown separately. Audio/motion preferences and the mandatory manga opening still apply.
+
+Run `npm test`, `npm run typecheck`, `npm run build`, and `node scripts/check-vercel-build.mjs`. Start a disposable production server with `GAME_SQLITE_PATH=/tmp/final-exam-lab-test.sqlite npm start -- --port 5174`, then run `GAME_TEST_URL=http://localhost:5174 node tests/lab-http.mjs`. That test waits for the real ten-second transition, checks solo bots, rejected early answers, duplicate readiness, exact timer start, and reconnect discovery.
+
+For a manual check, create a Race with bots and press **I’m ready**. Watch 10 → 0, search all three objects, submit a correct/wrong answer, and refresh to check discoveries. Repeat with two humans and eight humans. Use Tab/Enter to open labelled objects; check a phone in portrait, reduced motion, muted sound, and a disabled/failed image load. Existing lobby readiness resets once on upgrade; existing matches retain their original timers.
