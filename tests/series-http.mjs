@@ -17,7 +17,7 @@ const h = await post("create", {
   mode: "race",
   fillBots: false,
   bestOfThree: true,
-  freshPuzzles: false,
+  freshPuzzles: false, aptitudePuzzles: false,
 });
 assert.equal(h.status, 200, h.error);
 const b = await post("join", { code: h.session.code, name: "Series Guest" });

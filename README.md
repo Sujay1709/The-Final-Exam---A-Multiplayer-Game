@@ -1,6 +1,6 @@
 # The Final Exam — A Multiplayer Math Escape Room
 
-**The Professor’s Last Exam** is a browser game for **2–8 human players, or one human racing against bots** joining from their own devices with a six-letter room code. Race to escape first, or cooperate to escape together. Professor Elias Voss has turned a college reunion into five rooms of school-level math, countdowns, and escalating detention.
+**The Professor’s Last Exam** is a browser game for **2–8 human players, or one human racing against bots** joining from their own devices with a six-letter room code. Race to escape first, or cooperate to escape together. Professor Elias Voss has turned a college reunion into five visually distinct rooms of school-level math, optional aptitude puzzles, countdowns, and escalating detention.
 
 > An old grudge. Five locked rooms. Your only way out? Do the math.
 
@@ -26,7 +26,7 @@ Thirty years ago, Elias Voss spent months on his college team’s mathematics re
 
 Years later, Voss turned his science lab into a revenge experiment. He wired number locks into doors, installed countdowns, and built detention rooms. Then he invited his old teammates to a reunion. You must solve the locks and discover the truth in their unopened letter.
 
-Every page load begins with **The Missing Credit → The Grudge → The Experiment** before revealing the homepage. Press **Start story** once; each chapter receives twelve visible, unpaused seconds. There is no skip, chapter jump, premature enter button, or Escape dismissal. Hidden tabs pause playback. Pause/resume and sound controls remain available. Reduced motion removes camera movement while retaining automatic progression.
+Every page load begins with **The Missing Credit → The Grudge → The Experiment** before revealing the homepage. Press **Start story**, read at your own pace, and use **Next chapter**. **Enter the game** appears only in the third chapter. Chapters no longer advance on a timer. Hidden tabs pause the local soundtrack; pause/resume and sound controls affect music and camera motion. Reduced motion retains the same manual chapter navigation.
 
 This is a cinematic made from animated HD artwork, not a rendered video file. Its original laboratory soundtrack is synthesized locally in the browser. Audio needs a user gesture and can be muted. Captions and dialogue remain readable text. [Artwork notes](docs/story-art.md) document the original panels.
 
@@ -39,8 +39,8 @@ The original manga professor is the default interactive view. Mouse motion, touc
 3. Share the code or invitation link. Each human joins from their own browser/device. Humans joining the lobby replace bot seats.
 4. In **Race with bot filling enabled**, one connected human can race against seven bots. Co-op and Race without bots require at least two humans. Invite friends before readying up: humans replace bot seats until the countdown begins.
 5. When every human is connected and presses **I’m ready**, the server automatically starts a **10-second lab-loading countdown**. Watch Voss seal the doors, restore power, hide clues, and arm the locks. Puzzle timers and bots start only when the countdown ends.
-6. Search the **abandoned science laboratory**: tap the dusty notebook, chemical bottles, and broken terminal to reveal math clues. Use **Highlight objects** for free or expand **Search objects with labelled controls** for keyboard/touch access. Clue discovery survives reconnects; Race discoveries are private and Co-op discoveries are shared.
-7. Choose a lock and submit its numerical answer. Fractions and equivalent decimals are accepted; omit units and equations. Invalid input has no penalty.
+6. Search each room’s distinct environment and props: the abandoned lab, chemical factory, control room, geometry chamber, and Voss’s study. Detention has three separate environments. Use **Highlight objects** for free or expand **Search objects with labelled controls** for keyboard/touch access. Clue discovery survives reconnects; Race discoveries are private and Co-op discoveries are shared.
+7. Open a clue and submit its numerical answer, or select one aptitude answer option and press **Unlock**. Equivalent fractions/decimals are accepted for math. Invalid input has no penalty. Tapping family-tree nodes or highlighting objects is free.
 8. Solve all three main locks to clear a room. Race advances automatically after a three-second summary. Co-op lets the host advance after the team reads the explanations.
 
 **Race:** same questions for all racers, but only your submissions change your locks, clock, hints, score, and punishment. The first successful escape wins. Others continue until they escape, lose, or explicitly leave. Final results appear when everyone has finished. Your solved explanations remain available in **Your solved questions**; opponents’ hints and explanations are private.
@@ -164,7 +164,7 @@ For manual UI checks: try 375/390px phone widths and desktop; customize then rel
 - `components/game.tsx`: personal puzzle board, room channel, standings, and own-question review.
 - `components/prologue.tsx`, `components/professor.tsx`, `components/professor-scene.tsx`: cinematic, preserved manga motion, and optional original 3D figure.
 
-**Server authority:** deadlines and numerical validation live on the server. Browser timer edits cannot change rules. Race snapshots include only the authenticated player’s puzzles/explanations and opponents’ public progress; session tokens, RNG state, scheduled attempts, and private progress are excluded.
+**Server authority:** deadlines and numeric/choice validation live on the server. Browser timer edits cannot change rules. Race snapshots include only the authenticated player’s puzzles/explanations and opponents’ public progress; session tokens, RNG state, scheduled attempts, and private progress are excluded.
 
 **Optimistic concurrency:** a room update succeeds only if the stored version still matches the version read. Concurrent requests reload/retry on conflict. This prevents lost updates and duplicate awards. Seeded bot state is persisted through the same update, so retries do not create additional actions.
 
@@ -246,3 +246,20 @@ The lab scene uses original local WebP artwork with native button hotspots. It i
 Run `npm test`, `npm run typecheck`, `npm run build`, and `node scripts/check-vercel-build.mjs`. Start a disposable production server with `GAME_SQLITE_PATH=/tmp/final-exam-lab-test.sqlite npm start -- --port 5174`, then run `GAME_TEST_URL=http://localhost:5174 node tests/lab-http.mjs`. That test waits for the real ten-second transition, checks solo bots, rejected early answers, duplicate readiness, exact timer start, and reconnect discovery.
 
 For a manual check, create a Race with bots and press **I’m ready**. Watch 10 → 0, search all three objects, submit a correct/wrong answer, and refresh to check discoveries. Repeat with two humans and eight humans. Use Tab/Enter to open labelled objects; check a phone in portrait, reduced motion, muted sound, and a disabled/failed image load. Existing lobby readiness resets once on upgrade; existing matches retain their original timers.
+
+
+## Distinct rooms, aptitude, and manual story navigation
+
+`codex/room-worlds-aptitude` contains the latest changes on top of the v1 release. Each main room has its own local HD WebP illustration, lighting, descriptive copy, and positioned search targets. The three detention levels use the Warning Archive, Isolation Chamber, and Probation Vault. A return from detention restores the main room’s environment and solved locks. The next main room and possible detention artwork preload; failed art retains labelled clue controls. Orange remains the action/focus color, and reduced motion suppresses arrival animation.
+
+**Mix in aptitude** is enabled for new rooms. Each room contains two existing math locks plus one reasoning lock: family relationships, direction sense, ranking/order, letter patterns, then logical deduction. Junior/Senior settings govern complexity. Family-tree diagrams have tappable/keyboard-operable people and highlight direct connections; all facts are also present in text. Four answer options use native radio controls. Select one, then press Unlock. Exploring a diagram does not buy a math hint or change time.
+
+The server generates the same seeded option order and question bank for every seat. A correct choice earns the normal +100 main points and +20 seconds; wrong choices incur the usual time penalty. Invalid/out-of-range choices incur no answer penalty. Bots use valid alternative choices for incorrect attempts. Race hints and solved explanations remain private. Existing JSON rooms default to aptitude off and keep their concrete bank. Turn the option off in the lobby for the original math-only game.
+
+Only the opening story changed to manual Next. The ten-second entry countdown, three-second Race room summary, and host-controlled Co-op room progression are unchanged.
+
+Run `npm test`, `npm run typecheck`, and `npm run build -- --webpack` locally. Run `GAME_TEST_URL=http://localhost:5174 node tests/aptitude-http.mjs` against a disposable preview database; it plays all five rooms using answers inferred from visible aptitude facts, checks private snapshots, and fetches all seven added artwork files. The original authored-bank integration suites explicitly turn aptitude off. The new rules tests independently check 500 seeds at each question level, option validation, bot scheduling, saved-room compatibility, and all eight scene configurations.
+
+Manual checks: keep chapter one open for more than twelve seconds and confirm it waits for Next; advance through all three chapters; create a mixed Race; click and keyboard-activate each hotspot; trace a family member; select/submit an option; clear a room and observe its new environment; enter detention and return. Check 390px portrait, focus visibility, no horizontal overflow, reduced motion, sound, and artwork failure fallback. Physical-device touch remains a separate check from browser viewport emulation.
+
+Three further proposals, with scope and validation ideas: [Next additions](docs/next-additions.md). They are suggestions, not implemented features or measured retention gains.

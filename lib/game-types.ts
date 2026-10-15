@@ -1,3 +1,4 @@
+import type { FamilyTreeDiagram } from "./aptitude-types.ts";
 import type { GameSettings } from "./game-settings.ts";
 import type { AvatarProfile } from "./profiles.ts";
 export type Difficulty = "junior" | "senior";
@@ -29,6 +30,8 @@ export interface PuzzleView {
   hint: string | null;
   solution: string | null;
   locked: boolean;
+  choices: string[] | null;
+  diagram: FamilyTreeDiagram | null;
 }
 export interface AnswerFeedback {
   id: string;

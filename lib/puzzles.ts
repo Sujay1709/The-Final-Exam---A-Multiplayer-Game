@@ -1,3 +1,4 @@
+import type { FamilyTreeDiagram } from "./aptitude-types.ts";
 import type { Difficulty } from "./game-types.ts";
 export interface Puzzle {
   id: string;
@@ -8,6 +9,8 @@ export interface Puzzle {
   hint: string;
   solution: string;
   requires?: string[];
+  choices?: string[];
+  diagram?: FamilyTreeDiagram;
 }
 const p = (
   id: string,

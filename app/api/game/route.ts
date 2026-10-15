@@ -67,6 +67,8 @@ export async function POST(request: Request) {
             botSkill: a.botSkill ?? NEW_ROOM_SETTINGS.botSkill,
             fillBots: a.fillBots ?? NEW_ROOM_SETTINGS.fillBots,
             freshPuzzles: a.freshPuzzles ?? NEW_ROOM_SETTINGS.freshPuzzles,
+            aptitudePuzzles:
+              a.aptitudePuzzles ?? NEW_ROOM_SETTINGS.aptitudePuzzles,
             bestOfThree: a.bestOfThree ?? NEW_ROOM_SETTINGS.bestOfThree,
           });
         } catch (e) {

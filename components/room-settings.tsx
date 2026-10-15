@@ -94,6 +94,14 @@ export function RoomSettings({
         />
         Fresh numbers each round
       </label>
+      <label className="preference-toggle">
+        <input
+          type="checkbox"
+          checked={settings.aptitudePuzzles}
+          onChange={(e) => change({ aptitudePuzzles: e.target.checked })}
+        />
+        Mix in aptitude · family trees, directions, patterns & logic
+      </label>
       {settings.mode === "race" && (
         <label className="preference-toggle">
           <input
@@ -106,10 +114,14 @@ export function RoomSettings({
       )}
       <p className="help-text">
         {settings.mode === "race"
-          ? "Same questions. Your own timer, locks, hints, and detention. Two ready humans are required; bots fill up to eight seats."
+          ? settings.fillBots
+            ? "Same questions. Your own timer, locks, hints, and detention. One ready human can race against bots."
+            : "Same questions. Your own timer, locks, hints, and detention. At least two ready humans are required without bots."
           : "Human teammates share locks, time, hints, score, and detention."}{" "}
         Mathematics controls question level; time pressure controls the clock.
         Fresh numbers vary selected arithmetic, fractions, and algebra locks.
+        Aptitude replaces one lock per room; rewards and penalties stay the
+        same.
       </p>
     </fieldset>
   );

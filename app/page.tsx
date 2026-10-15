@@ -385,9 +385,9 @@ export default function Home() {
           </DialogDescription>
           <ol className="rules-list">
             <li>
-              Two to eight humans join by code. Two connected, ready humans are
-              required to start. Race can fill the remaining seats with clearly
-              labelled bots.
+              Join by code with up to eight humans. Race with bots permits one
+              human; Co-op and Race without bots require two. Everyone readies
+              up, then a ten-second countdown begins automatically.
             </li>
             <li>
               Five rooms, three locks each. Race gives each player independent
@@ -396,8 +396,10 @@ export default function Home() {
               lets the host open each next room.
             </li>
             <li>
-              Junior is classes 5–8; Senior is classes 9–12. Time pressure is
-              separate: Easy / Medium / Hard start at 5 / 4 / 3 minutes.
+              Junior is classes 5–8; Senior is classes 9–12. Aptitude adds one
+              family-tree, direction, ranking, pattern, or logic lock per room.
+              Select an option, then Unlock. Math-only play is available in room
+              settings. Easy / Medium / Hard give 5 / 4 / 3 minutes.
             </li>
             <li>
               Correct answers add 20 seconds and 100 main-room points. Wrong

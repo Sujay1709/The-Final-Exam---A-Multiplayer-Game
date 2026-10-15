@@ -1,4 +1,5 @@
 import { PUZZLES, DETENTION, type Puzzle } from "./puzzles.ts";
+import { withAptitude } from "./aptitude-puzzles.ts";
 import { generatePuzzleRooms } from "./puzzle-variations.ts";
 import {
   ROOM_INFO,
@@ -136,6 +137,7 @@ export function normalizeGame(g: GameState): GameState {
   g.botSkill ??= "medium";
   g.fillBots ??= false;
   g.freshPuzzles ??= false;
+  g.aptitudePuzzles ??= false;
   g.bestOfThree ??= false;
   g.series ??= null;
   // Readiness from the old host-start lobby does not imply consent to an
@@ -184,6 +186,7 @@ export function createGame(
       botSkill: "medium",
       fillBots: false,
       freshPuzzles: false,
+      aptitudePuzzles: false,
       bestOfThree: false,
     }),
     code,
@@ -480,12 +483,15 @@ function canBegin(g: GameState, now: number) {
   );
 }
 function beginCountdown(g: GameState, now: number) {
-  g.puzzleRooms = g.freshPuzzles
-    ? generatePuzzleRooms(
-        g.difficulty,
-        (g.seed ^ Math.imul(g.run, 2654435761)) >>> 0,
-      )
-    : undefined;
+  const seed = (g.seed ^ Math.imul(g.run, 2654435761)) >>> 0;
+  const mathRooms = g.freshPuzzles
+    ? generatePuzzleRooms(g.difficulty, seed)
+    : PUZZLES[g.difficulty];
+  g.puzzleRooms = g.aptitudePuzzles
+    ? withAptitude(mathRooms, g.difficulty, seed)
+    : g.freshPuzzles
+      ? mathRooms
+      : undefined;
   g.phase = "loading";
   g.entryAt = now + LAB_ENTRY_SECONDS * 1000;
   if (g.bestOfThree && !g.series) {
@@ -612,7 +618,9 @@ export function advanceClock(g: GameState, now: number) {
           q,
           random(player) < BOT_RULES[g.botSkill].accuracy
             ? q.answer
-            : q.answer + 1,
+            : q.choices
+              ? (q.answer % q.choices.length) + 1
+              : q.answer + 1,
           at,
         );
       if (!terminal(p) && p.phase !== "cleared") schedule(g, player, at);
@@ -748,6 +756,7 @@ export function mutateGame(g: GameState, a: Action, now: number): GameState {
         botSkill: a.botSkill ?? g.botSkill,
         fillBots: a.fillBots ?? g.fillBots,
         freshPuzzles: a.freshPuzzles ?? g.freshPuzzles,
+        aptitudePuzzles: a.aptitudePuzzles ?? g.aptitudePuzzles,
         bestOfThree: a.bestOfThree ?? g.bestOfThree,
       });
     } catch (e) {
@@ -911,6 +920,14 @@ export function mutateGame(g: GameState, a: Action, now: number): GameState {
     }
     if (a.op === "answer") {
       const value = parseAnswer(a.answer);
+      if (
+        q.choices &&
+        (value === null ||
+          !Number.isInteger(value) ||
+          value < 1 ||
+          value > q.choices.length)
+      )
+        throw new GameError("Choose one of the displayed answer options.");
       if (value === null)
         throw new GameError(
           "Enter a number, decimal, or fraction such as 3/8. Leave out units.",
@@ -987,6 +1004,7 @@ export function snapshot(
     botSkill: g.botSkill,
     fillBots: g.fillBots,
     freshPuzzles: g.freshPuzzles,
+    aptitudePuzzles: g.aptitudePuzzles,
     bestOfThree: g.bestOfThree,
     series: g.series
       ? {
@@ -1045,6 +1063,8 @@ export function snapshot(
             title: q.title,
             topic: q.topic,
             prompt: q.prompt,
+            choices: q.choices ? [...q.choices] : null,
+            diagram: q.diagram ? structuredClone(q.diagram) : null,
             solved: !!p.solved[q.id],
             solvedBy: p.solved[q.id] ?? null,
             hint: p.hinted.includes(q.id) || end ? q.hint : null,
