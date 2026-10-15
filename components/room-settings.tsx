@@ -35,13 +35,13 @@ export function RoomSettings({
           </select>
         </label>
         <label>
-          Mathematics
+          Riddle wording
           <select
             value={difficulty}
             onChange={(e) => onChange(settings, e.target.value as Difficulty)}
           >
-            <option value="junior">Junior · classes 5–8</option>
-            <option value="senior">Senior · classes 9–12</option>
+            <option value="junior">Cryptic · contextual clues</option>
+            <option value="senior">Expert · indirect clues</option>
           </select>
         </label>
         <label>
@@ -86,22 +86,6 @@ export function RoomSettings({
           Fill empty seats with bots
         </label>
       )}
-      <label className="preference-toggle">
-        <input
-          type="checkbox"
-          checked={settings.freshPuzzles}
-          onChange={(e) => change({ freshPuzzles: e.target.checked })}
-        />
-        Fresh numbers each round
-      </label>
-      <label className="preference-toggle">
-        <input
-          type="checkbox"
-          checked={settings.aptitudePuzzles}
-          onChange={(e) => change({ aptitudePuzzles: e.target.checked })}
-        />
-        Mix in aptitude · family trees, directions, patterns & logic
-      </label>
       {settings.mode === "race" && (
         <label className="preference-toggle">
           <input
@@ -118,10 +102,9 @@ export function RoomSettings({
             ? "Same questions. Your own timer, locks, hints, and detention. One ready human can race against bots."
             : "Same questions. Your own timer, locks, hints, and detention. At least two ready humans are required without bots."
           : "Human teammates share locks, time, hints, score, and detention."}{" "}
-        Mathematics controls question level; time pressure controls the clock.
-        Fresh numbers vary selected arithmetic, fractions, and algebra locks.
-        Aptitude replaces one lock per room; rewards and penalties stay the
-        same.
+        Follow fifteen “What am I?” riddles in order. Each correct answer
+        unlocks a harder clue and a larger reward: 100–450 points. Wording
+        changes how indirect the clues are; time pressure controls the clock.
       </p>
     </fieldset>
   );

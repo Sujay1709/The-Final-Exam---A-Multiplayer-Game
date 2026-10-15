@@ -2,8 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { withAptitude } from "../lib/aptitude-puzzles.ts";
 import { PUZZLES } from "../lib/puzzles.ts";
+import { createGame } from "./legacy-game.ts";
 import {
-  createGame,
   joinGame,
   mutateGame,
   advanceClock,
@@ -157,7 +157,7 @@ test("choice submissions reject forged options, preserve normal penalties, repla
     for (const answer of ["0", "5", "2.5", "NaN", "A", "999"])
       assert.throws(() => act(answer, T + 10001), /displayed answer/);
     assert.equal(snapshot(g, 2, T + 10001, "h").wrongCount, 0);
-    act(String((q.answer % 4) + 1), T + 11000);
+    act(String((Number(q.answer) % 4) + 1), T + 11000);
     const wrong = snapshot(g, 3, T + 11000, "h");
     assert.equal(wrong.deadline, initial.deadline! - 10000);
     assert.equal(wrong.wrongCount, 1);
@@ -188,8 +188,8 @@ test("choice submissions reject forged options, preserve normal penalties, repla
       assert.ok(!raw.includes(key));
   }
 });
-test("aptitude remains optional, new-room defaults enable it, and old saved games retain their current bank", () => {
-  assert.equal(NEW_ROOM_SETTINGS.aptitudePuzzles, true);
+test("legacy aptitude banks remain readable, new treasure rooms disable it, and old games retain their bank", () => {
+  assert.equal(NEW_ROOM_SETTINGS.aptitudePuzzles, false);
   const g = fixture(),
     before = JSON.stringify(g.puzzleRooms);
   delete (g as Partial<typeof g>).aptitudePuzzles;

@@ -1,108 +1,67 @@
-# The Final Exam — A Multiplayer Math Escape Room
+# The Final Exam — A Multiplayer Treasure Hunt
 
-**The Professor’s Last Exam** is a browser game for **2–8 human players, or one human racing against bots** joining from their own devices with a six-letter room code. Race to escape first, or cooperate to escape together. Professor Elias Voss has turned a college reunion into five visually distinct rooms of school-level math, optional aptitude puzzles, countdowns, and escalating detention.
+**The Professor’s Last Exam** is a timed treasure-hunt escape game for **2–8 humans, or one human racing against bots**. Join by six-letter code, search five illustrated rooms, and solve progressively harder **“What am I?”** riddles. New games contain no math questions, numeric locks, aptitude questions, or school-grade settings.
 
-> An old grudge. Five locked rooms. Your only way out? Do the math.
+> An old grudge. Five locked rooms. Follow the hidden trail.
 
-## Features
+[Professor backstory preview](docs/treasure-home-preview.jpg) · [Floating treasure score preview](docs/treasure-score-preview.jpg)
 
-- Race with individual locks, clocks, hints, scores, detention, live standings, and final results.
-- Co-op with human teammates and shared progress; room-code joining and host migration.
-- Optional bots fill Race rooms up to eight total seats, with independent skill settings.
-- Eight original SVG manga avatars, cosmetic customization, anonymous aliases, and persistent browser preferences.
-- Orange actions/focus, touch targets, responsive layouts, and reduced motion.
-- Preserved HD manga Voss with interactive 2.5D movement; optional original full-body Three.js sculpt.
-- Mandatory opening cinematic, readable white speech clouds, original local soundtrack, and pause/resume.
+## The professor’s story
 
-## Preview
+Thirty years ago, Elias Voss built the research that won his college team a prize. A printing error left his name off the certificate. He walked away before his friends could explain, kept their letters unopened, and spent years treating a mistake as a betrayal.
 
-![Orange interface and preserved manga Voss](docs/orange-home-preview.jpg)
+Tonight he invites his old team to a reunion in a laboratory full of hidden objects, riddles, and detention doors. Their unopened letter waits in his private study. Escape means discovering both the way out and the truth he refused to read.
 
-[Opening cinematic](docs/cinematic-preview.jpg) · [Live race](docs/race-preview.jpg)
-
-## Backstory and cinematic
-
-Thirty years ago, Elias Voss spent months on his college team’s mathematics research. At the science fair, his friends received the award while his name was missing. He walked away before they could explain. Their letters stayed unopened; a printing error became a betrayal in his mind.
-
-Years later, Voss turned his science lab into a revenge experiment. He wired number locks into doors, installed countdowns, and built detention rooms. Then he invited his old teammates to a reunion. You must solve the locks and discover the truth in their unopened letter.
-
-Every page load begins with **The Missing Credit → The Grudge → The Experiment** before revealing the homepage. Press **Start story**, read at your own pace, and use **Next chapter**. **Enter the game** appears only in the third chapter. Chapters no longer advance on a timer. Hidden tabs pause the local soundtrack; pause/resume and sound controls affect music and camera motion. Reduced motion retains the same manual chapter navigation.
-
-This is a cinematic made from animated HD artwork, not a rendered video file. Its original laboratory soundtrack is synthesized locally in the browser. Audio needs a user gesture and can be muted. Captions and dialogue remain readable text. [Artwork notes](docs/story-art.md) document the original panels.
-
-The original manga professor is the default interactive view. Mouse motion, touch tap/horizontal drag, and labelled movement/reset buttons provide bounded **2.5D parallax**. This does not reconstruct the artwork as a 3D model. The optional **3D sculpt** is an original toon-shaded, full-body Three.js Voss with articulated head/torso/arms, silver hair, glasses, coat, notebook, and lab props. It lazy-loads, pauses when hidden/offscreen, resizes to its container, respects reduced motion, and disposes graphics resources. WebGL failure retains the manga portrait. Touch panels preserve vertical page scrolling.
+The homepage’s right-hand personnel file tells this backstory beneath the preserved interactive manga portrait / optional Three.js sculpt. The original HD opening story remains in order: **The Missing Credit → The Grudge → The Experiment**. Use **Start story**, **Next chapter**, then **Enter the game**. No chapter advances on a timer. Sound, pause, and reduced-motion controls remain available.
 
 ## How to play
 
-1. Complete the opening story, then preview your character and edit your anonymous alias (1–20 characters).
-2. Create a room with mode, mathematics, time pressure, and optional bot settings; or join by code.
-3. Share the code or invitation link. Each human joins from their own browser/device. Humans joining the lobby replace bot seats.
-4. In **Race with bot filling enabled**, one connected human can race against seven bots. Co-op and Race without bots require at least two humans. Invite friends before readying up: humans replace bot seats until the countdown begins.
-5. When every human is connected and presses **I’m ready**, the server automatically starts a **10-second lab-loading countdown**. Watch Voss seal the doors, restore power, hide clues, and arm the locks. Puzzle timers and bots start only when the countdown ends.
-6. Search each room’s distinct environment and props: the abandoned lab, chemical factory, control room, geometry chamber, and Voss’s study. Detention has three separate environments. Use **Highlight objects** for free or expand **Search objects with labelled controls** for keyboard/touch access. Clue discovery survives reconnects; Race discoveries are private and Co-op discoveries are shared.
-7. Open a clue and submit its numerical answer, or select one aptitude answer option and press **Unlock**. Equivalent fractions/decimals are accepted for math. Invalid input has no penalty. Tapping family-tree nodes or highlighting objects is free.
-8. Solve all three main locks to clear a room. Race advances automatically after a three-second summary. Co-op lets the host advance after the team reads the explanations.
+1. Choose a cosmetic avatar and anonymous alias, then create or join a room.
+2. Choose Race or Co-op, Cryptic or Expert wording, time pressure, and optional Race bot skill. Invite friends before readying up: humans replace bot seats.
+3. Every human presses **I’m ready**. A server-controlled ten-second loading countdown seals the laboratory. Race with bots needs one human; other configurations need two.
+4. Search the first available object. Use **Highlight objects** or the labelled keyboard/touch controls for free. Solve its “What am I?” riddle by typing the object or idea and pressing **Unlock**.
+5. A correct answer opens the next object, a tougher riddle, and a larger reward. Later locks cannot be claimed, hinted, or answered before their predecessor is solved.
+6. Solve three clues to clear a room. Race advances after a three-second summary; Co-op waits for the host. Clear all five rooms to escape.
 
-**Race:** same questions for all racers, but only your submissions change your locks, clock, hints, score, and punishment. The first successful escape wins. Others continue until they escape, lose, or explicitly leave. Final results appear when everyone has finished. Your solved explanations remain available in **Your solved questions**; opponents’ hints and explanations are private.
+**Race:** identical riddles, independent progress, timer, hints, score, and detention. First escape wins; others can continue. Opponent solutions remain private. Public standings show escape progress rather than a points table. Your explanations stay in **Your recovered clues**.
 
-**Co-op:** humans share locks, time, hints, score, and punishment. A teammate’s correct answer helps everyone. There are no bot teammates in Co-op. Use the room channel to coordinate.
+**Co-op:** human teammates share clues, time, score, and punishment. Anyone can solve the next available clue. Bots are Race opponents only.
 
-The host can change lobby settings; a change resets human readiness so players acknowledge the new rules. Character/alias edits are lobby-only. Sound and motion settings are available throughout play. Customization gives no gameplay advantage. Aliases must be unique in the room, case insensitive; the server validates catalog colors/accessories and authorizes only the caller’s own profile.
+Aliases are unique within the room and limited to twenty characters. Avatar customization is cosmetic. Browser preferences persist; profiles can change in the lobby, sound and motion throughout play. Rooms expire after twenty-four hours.
 
-## Mathematics
+## The trail and its difficulty
 
-**Junior:** classes 5–8. **Senior:** classes 9–12. These control the questions, independently of time pressure and bot skill. Questions grow harder across the rooms, within the selected range. The existing authored bank is preserved.
+- **Abandoned Laboratory:** the first trail, clues 1–3.
+- **Alchemist’s Workshop:** lost instruments, clues 4–6.
+- **Storm Engine:** the captive storm, clues 7–9.
+- **Hall of Reflections:** appearances and fragments, clues 10–12.
+- **The Final Exam / Voss’s study:** buried truths, clues 13–15.
 
-| Room                    | Theme                          | Junior examples                       | Senior examples                                 |
-| ----------------------- | ------------------------------ | ------------------------------------- | ----------------------------------------------- |
-| 1. The Abandoned Laboratory | Arithmetic and patterns        | Order of operations, number sequences | Signed numbers, more involved patterns          |
-| 2. The Fraction Factory | Fractions, ratios, percentages | Fractions of amounts, discounts       | Fraction addition, successive percentages       |
-| 3. The Algebra Alarm    | Equations and powers           | One-step and two-step equations       | Linear equations, exponent rules, square roots  |
-| 4. The Geometry Trap    | Shapes and measurements        | Area, perimeter, triangle angles      | Pythagoras, circle area, a trigonometric ratio  |
-| 5. The Final Exam       | Mixed final challenge          | Equations, probability, averages      | Simultaneous equations, probability, quadratics |
+Each room retains its own HD local artwork, positioned props, accessible controls, and atmosphere. Warning Archive, Isolation Chamber, and Probation Vault are separate recovery environments.
 
+**Cryptic** provides more contextual clues. **Expert** uses more indirect language for the same answers, ranks, and point values. Difficulty is authored, not empirically calibrated; playtesting may reveal ambiguous clues. Hints deliberately disambiguate the intended answer. The rare manuscript term near the end has a direct hint so it cannot permanently block younger players.
 
-These are approachable questions within the selected range, not complete coverage of every syllabus. Required geometry formulas appear in prompts. Detention uses familiar, simpler math for both mathematics settings.
+## Answers, score, and penalties
 
-## Rules, scoring, and punishment
+Answers are checked on the server against the intended word and curated alternatives. Capitalization, leading “a/an/the,” repeated spaces, and trailing punctuation are normalized. “Key” and “the brass key” both work. We do not use fuzzy substring matching: “keyboard” cannot pass as “key.” Empty, numeric, oversized, or malformed text is rejected without a penalty; a valid but incorrect guess costs time.
 
-| Time pressure | Easy | Medium | Hard |
-| --- | ---: | ---: | ---: |
-| Main-room countdown | 300s | 240s | 180s |
-| Wrong-answer penalty | −5s | −10s | −15s |
-| Hint penalty, once per puzzle | −10s | −15s | −20s |
-| Detention level 1 | 90s | 60s | 45s |
-| Detention level 2 | 120s | 90s | 60s |
-| Detention level 3 | 150s | 120s | 90s |
-| Time after clearing detention | 150s | 120s | 90s |
+- Main clue rewards rise **100, 125, 150, …, 450 points**: **4,125 base points** for all fifteen clues.
+- Every correct answer adds **20 seconds**. Clearing a main room adds one point per whole second remaining.
+- A confirmed score change launches a **3D-style treasure card** showing the gain and current total. It floats upward and vanishes after five seconds. **Treasure score** reveals the total again. The animation uses CSS perspective, not WebGL; reduced motion uses a quiet timed display. A screen-reader status retains the total.
+- A main timeout costs **100 points**, clamped to zero, and adds detention. Recovery has one, two, then three ordered riddles; each is worth **50 × detention level** points. Solved main clues stay solved.
+- Easy / Medium / Hard main clocks: **300 / 240 / 180 seconds**. Wrong guesses: **−5 / −10 / −15 seconds**. Each purchased hint: **−10 / −15 / −20 seconds**.
+- Easy detention clocks: **90 / 120 / 150 seconds**; Medium: **60 / 90 / 120**; Hard: **45 / 60 / 90**. Clearing detention resumes the main room with **150 / 120 / 90 seconds**, respectively.
+- Fail detention or miss a fourth main deadline and the attempt ends.
 
-- Correct answers add **20 seconds**; main puzzles also award **100 points**.
-- Clear a main room for one bonus point per whole second remaining.
-- A main timeout removes **100 points**, clamped to zero, and raises punishment by one.
-- Level 1 detention has one puzzle; level 2 has two; level 3 has two fragments and a dependent exit-code lock.
-- Clear detention to resume the unfinished main room. Solved main locks stay open; punishment does not reset.
-- Correct detention answers add time but no puzzle points; wrong answers and hints use the normal penalties.
-- Fail detention or miss a fourth main deadline and the attempt ends. Clearing all five main rooms is an escape.
+The single visible score card replaces the old fixed sidebar total. End-of-round results keep your final total and public finishing order. Replayed submissions cannot award extra points, and browser polling cannot accelerate opponents.
 
-Medium preserves the original approved scoring rules. Punishment belongs to each racer in Race and to the team in Co-op. A wrong answer removes time; punishment rises only when a main deadline expires, including penalties that push the clock to zero.
+## Bots, rematches, and saved games
 
-### Bot behavior
+Race fills to eight seats by default: one human plus seven bots, two plus six, or eight humans with none. Bots are always marked **BOT**, never become host, and solve the same ordered riddles through the same answer checker. Easy attempts take 25–45 seconds at 55% simulated accuracy; Medium 14–25 at 75%; Hard 8–16 at 90%. Server timestamps and seeded randomness make delayed reconnects equivalent to frequent polling.
 
-| Bot skill | Delay between attempts | Answer accuracy |
-| --- | --- | ---: |
-| Easy | 25–45 seconds | 55% |
-| Medium | 14–25 seconds | 75% |
-| Hard | 8–16 seconds | 90% |
+Best-of-three rivalries remain optional. First to two round wins takes the series; three rounds without a sole leader end in a draw. Remaining connected humans must agree to rematch and ready up again. Settings stay fixed within a rivalry.
 
-Bots are simulated opponents, not AI/ML models. The server samples seeded attempt delays and success/failure, then uses the same numerical answer validator and penalties as humans. BOT badges identify them. Delay and accuracy control simulated skill, separately from game time pressure. New Race rooms fill vacant seats by default: one human produces seven bots; two humans produce six bots; eight humans produce none. Bot filling can be disabled.
-
-Scheduled actions and deadlines are processed in chronological server time. Extra polling cannot accelerate bots or award duplicate points. If nobody sends requests, the server catches up from the original timestamps on the next authenticated request; reconnecting grants no extra time. A disconnected human’s timer continues; an explicit leave ends that racer’s participation. Departed racers remain in final results. All humans leaving stops the bots. A host absent for 30 seconds is replaced by a connected human.
-
-**New-room defaults:** Race, Junior, Medium time pressure, Medium bot skill, bot filling enabled. Older stored rooms normalize to Co-op/Medium with default avatars.
-
-<details><summary>Story ending — spoilers</summary>
-The unopened letter reveals a printing error. His friends tried to correct the missing credit, but Voss never read their messages. Escape reveals the misunderstanding.
-</details>
+**New-room defaults:** Race, Cryptic wording, Medium clock, Medium bots, bot filling enabled. Retired math/aptitude flags cannot restore math in a newly created room. Their code and fixture tests remain only for compatibility with previously saved numeric matches; existing active JSON banks are not destructively rewritten. Create a new room for the treasure-hunt rules.
 
 ## Run locally
 
@@ -113,7 +72,7 @@ Requires **Node.js 24.x** and npm. The deployment target is now native Next.js, 
 ```sh
 cd "/Users/sujaygopal/Desktop/MyProjects/The-Final-Exam---A-Multiplayer-Game"
 nvm use 24
-git switch main
+git switch codex/treasure-hunt
 npm run install:ci
 npm run dev
 ```
@@ -126,7 +85,7 @@ Browser storage holds the device’s profile/preferences and current session cre
 
 ## Deploy on Vercel
 
-See [the deployment guide](docs/vercel-deployment.md) for database setup and project settings. Vercel Production builds the complete game from GitHub `main`.
+See [the deployment guide](docs/vercel-deployment.md) for database setup and project settings. Vercel Production follows GitHub `main`; this feature branch is a local preview until reviewed and merged.
 
 The prior `npm run build` invoked Vinext and wrote Cloudflare output under `dist/`; Vercel's Next.js preset expected `.next/routes-manifest.json`. The build now runs `next build`, and `vercel.json` pins the framework, install command, build command, and `.next` output. Do not restore the Vinext build command or choose `dist` as Vercel's output directory.
 
@@ -145,6 +104,10 @@ node scripts/check-vercel-build.mjs
 node tests/integration.mjs
 node tests/profiles-http.mjs
 node tests/race-http.mjs
+node tests/fresh-http.mjs
+node tests/series-http.mjs
+node tests/lab-http.mjs
+node tests/treasure-http.mjs
 ```
 
 Controlled-clock tests cover original Co-op rules, pressure settings, isolated detention, automatic progression, deadline catch-up, first escape/final ordering, host migration, bot scheduling independent of polling, reconnects, legacy state, and all 3200 avatar combinations. HTTP tests cover eight humans, two humans plus six bots, replacement/capacity, concurrent submissions, idempotency, settings/profile permissions, alias validation, and private snapshots. Storage tests also cover preserved local data, remote credential validation, the real SDK against a local Hrana HTTP fixture, collision handling, expiry, and versioned concurrent writes. GitHub CI checks the native Next.js manifests and runs HTTP tests against the production server with a disposable local database.
@@ -155,7 +118,7 @@ For manual UI checks: try 375/390px phone widths and desktop; customize then rel
 
 - `lib/game.ts`: shared rule functions operate on either one cooperative progress record or a private record per racer; bots use the same validator.
 - `lib/game-settings.ts`: pressure/skill tables and validated room settings.
-- `lib/game-types.ts`: public contracts; `lib/puzzles.ts`: server-only authored question/answer bank.
+- `lib/game-types.ts`: public contracts; `lib/treasure-hunt.ts`: server-only riddle bank, aliases, ranks, and rewards.
 - `app/api/game/route.ts`: session authentication, room creation/joining, viewer-specific snapshots, and versioned SQL updates.
 - `db/index.ts`, `db/config.ts`, `db/sql-store.ts`, `db/local.ts`, `db/remote.ts`: server-only storage selection and the shared parameterized SQL/CAS contract.
 - `lib/use-game.ts`: polling every 1.2 seconds, reconnects, and server-clock synchronization.
@@ -164,7 +127,7 @@ For manual UI checks: try 375/390px phone widths and desktop; customize then rel
 - `components/game.tsx`: personal puzzle board, room channel, standings, and own-question review.
 - `components/prologue.tsx`, `components/professor.tsx`, `components/professor-scene.tsx`: cinematic, preserved manga motion, and optional original 3D figure.
 
-**Server authority:** deadlines and numeric/choice validation live on the server. Browser timer edits cannot change rules. Race snapshots include only the authenticated player’s puzzles/explanations and opponents’ public progress; session tokens, RNG state, scheduled attempts, and private progress are excluded.
+**Server authority:** deadlines and textual answer validation live on the server. Browser timer edits cannot change rules. Race snapshots include only the authenticated player’s puzzles/explanations and opponents’ public progress; session tokens, RNG state, scheduled attempts, and private progress are excluded.
 
 **Optimistic concurrency:** a room update succeeds only if the stored version still matches the version read. Concurrent requests reload/retry on conflict. This prevents lost updates and duplicate awards. Seeded bot state is persisted through the same update, so retries do not create additional actions.
 
@@ -179,87 +142,15 @@ For manual UI checks: try 375/390px phone widths and desktop; customize then rel
 - Silent audio: press Start story or a sound button; browsers require a gesture. Check the mute preference.
 - No 3D: use the preserved portrait; WebGL may be unavailable. Clear hot-reload hook errors by refreshing.
 
-The fixed bank contains 30 main puzzles and six detention steps. Replays repeat questions. Bots simulate skill; they do not learn. Tests validate room-level correctness, not large-scale load. There are no app accounts, global leaderboard, or ML inference. Optional fresh-number templates vary selected puzzles; the authored bank remains available. Public deployment still benefits from abuse protection and classroom testing. The remote database adapter is tested locally through its SQL contract; hosted room creation should be verified after connecting Turso.
+The fixed treasure trail contains fifteen main riddles with two wording levels and six recovery riddles. Replays repeat answers. Bots simulate skill; they do not learn. Tests validate rules and concurrency, not large-scale load. There are no app accounts, global leaderboard, or ML inference. Public deployment still benefits from abuse protection and classroom testing. The remote database adapter is tested locally through its SQL contract; hosted room creation should be verified after connecting Turso.
 
-## Feature PRs and future updates
-
-These feature branches preserve the development history; their work is included in `main`:
-
-| Branch | PR target | Responsibility |
-| --- | --- | --- |
-| `codex/ui-orange-3d` | `main` | Orange UI, cinematic, preserved interactive manga, optional 3D |
-| `codex/player-profiles` | `codex/ui-orange-3d` | Original avatars, aliases, persistent settings, profile authorization |
-| `codex/race-bots` | `codex/player-profiles` | Race, pressure/skill settings, deterministic bots, private progress |
-| `codex/vercel-compat` | `codex/race-bots` | Native Next.js output, portable SQL storage, Vercel configuration and checks |
-
-The latest game and deployment fixes are on `main`. Existing feature branches and Git history are retained. Keep future changes focused, test them, and open a PR. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Portfolio explanation
 
-**Resume bullet:** Built a 2–8-player math escape game with independent competitive progress, deterministic simulated opponents, cosmetic profiles, server-authoritative deadlines, and versioned SQLite updates; validated concurrency and private snapshots through rules and HTTP tests.
+**Resume bullet:** Built a multiplayer narrative treasure hunt with server-validated riddle aliases, ordered clue progression, escalating rewards, deterministic bot opponents, replay-safe scoring, and an accessible animated score display.
 
-**Project description:** A narrative browser party game where students race or cooperate to solve progressively harder school math under time pressure.
+**Interview explanation:** The server owns progression and scoring. Clients receive public clue descriptions and their own unlocked explanations; answer aliases and opponent solutions remain private. Database compare-and-swap updates and action receipts prevent concurrent or replayed requests from duplicating rewards.
 
-**Interview explanation:** I reused one rules engine for shared and private progress, separated question level from time pressure/opponent skill, and processed seeded bot actions in logical server time. Versioned database writes and replay receipts prevent duplicate awards; viewer-specific snapshots protect opponents’ explanations.
+**Recruiter explanation:** Friends join from their phones and uncover a professor’s story by solving hidden riddles under time pressure.
 
-**Recruiter explanation:** Friends join by code on their phones, customize characters, and escape a professor’s lab by solving math. Small groups can compete against clearly labelled computer opponents.
-
-### Solve feedback and cosmetic streaks
-
-Correct answers show lock-opening feedback and a streak badge. Three consecutive correct answers earn **Sharp mind**; five earn **Lab legend**. These are cosmetic: +100 points per main lock and +20 seconds per correct answer remain unchanged. A wrong answer or missed deadline breaks the current streak. Co-op shares a team streak; Race keeps each streak private. Mobile answer controls stay visible while scrolling within the question panel. System/browser reduced motion and the player's motion setting disable the lock animation.
-
-### Fresh puzzle variations
-
-New rooms enable **Fresh numbers each round**. Selected arithmetic, fraction, percentage, and algebra locks use bounded seeded templates. Every seat receives the same stored question set; reconnecting cannot regenerate it. Answers and explanations stay on the server until each player's rules allow disclosure. A rematch changes the numbers, while Junior/Senior topics and all time-pressure rules stay the same. Turn the toggle off for the original authored bank; legacy rooms keep their existing questions. Detention questions retain their original prerequisite/code rules.
-
-Run `node tests/fresh-http.mjs` against your local production server to check generated questions through the real multiplayer API.
-
-### Best-of-three rivalries and rematches
-
-In Race, enable **Best-of-three rivalry** in Room settings before starting. The first successful escape earns one round win. The series ends when a racer reaches two wins or after three completed rounds. If several racers tie for the most wins after three rounds, the series is a draw; a round with no escape awards no win. Bots can win rounds and are always labelled BOT.
-
-After every racer finishes or leaves, all remaining humans can vote for the next round. Every remaining connected human must vote (one is sufficient in a bot-filled Race, otherwise at least two are needed); the room then returns to the lobby, and everyone must ready up again. Profiles, settings, and series wins persist. Settings and roster additions are locked between rivalry rounds, while lobby alias/avatar edits remain available. The host can explicitly end an unfinished rivalry after a round, or set up a new rivalry after completion. Standard Race and Co-op also offer consensus rematch votes.
-
-Results show the round podium and your answer accuracy, elapsed time, and best streak. Accuracy includes all accepted main/detention submissions; hints and malformed answers are excluded. Time includes room summaries and detention, and freezes when you finish. Co-op displays the team's aggregate recap. Series records live only in the room and expire with its existing 24-hour lifetime.
-
-Run all checks with Node 24:
-
-```sh
-npm test
-npm run typecheck
-npm run build
-node scripts/check-vercel-build.mjs
-GAME_SQLITE_PATH=/tmp/final-exam-engagement-test.sqlite npm start
-```
-
-In another terminal, run `node tests/integration.mjs`, `node tests/profiles-http.mjs`, `node tests/race-http.mjs`, `node tests/fresh-http.mjs`, `node tests/series-http.mjs`, and `node tests/lab-http.mjs`. The series HTTP test plays two full rounds, including entry countdowns, and takes about 75 seconds. Use `GAME_TEST_URL=http://localhost:5174` if your test server uses another port. New-room defaults remain Race/Junior/Medium with bot filling on; fresh numbers are on and rivalries are opt-in.
-
-Feature branches: `codex/solve-feedback` → `codex/fresh-puzzles` → `codex/rivalry-series` → `codex/lab-entry`. The final branch also includes the automatic lab-entry sequence and interactive laboratory. Keep their dependent PRs open until reviewed.
-
-Portfolio explanation: a server-authoritative game generates fair deterministic challenges, protects private progress, and coordinates replay-safe multiplayer series. Retention improvement is a hypothesis to measure through playtesting, not a claimed result.
-
-
-### Laboratory entry checks
-
-The lab scene uses original local WebP artwork with native button hotspots. It is an illustrated room, not a 3D environment. Mathematics and scoring are unchanged. The startup progress is part of the story; actual server/network errors are shown separately. Audio/motion preferences and the mandatory manga opening still apply.
-
-Run `npm test`, `npm run typecheck`, `npm run build`, and `node scripts/check-vercel-build.mjs`. Start a disposable production server with `GAME_SQLITE_PATH=/tmp/final-exam-lab-test.sqlite npm start -- --port 5174`, then run `GAME_TEST_URL=http://localhost:5174 node tests/lab-http.mjs`. That test waits for the real ten-second transition, checks solo bots, rejected early answers, duplicate readiness, exact timer start, and reconnect discovery.
-
-For a manual check, create a Race with bots and press **I’m ready**. Watch 10 → 0, search all three objects, submit a correct/wrong answer, and refresh to check discoveries. Repeat with two humans and eight humans. Use Tab/Enter to open labelled objects; check a phone in portrait, reduced motion, muted sound, and a disabled/failed image load. Existing lobby readiness resets once on upgrade; existing matches retain their original timers.
-
-
-## Distinct rooms, aptitude, and manual story navigation
-
-`codex/room-worlds-aptitude` contains the latest changes on top of the v1 release. Each main room has its own local HD WebP illustration, lighting, descriptive copy, and positioned search targets. The three detention levels use the Warning Archive, Isolation Chamber, and Probation Vault. A return from detention restores the main room’s environment and solved locks. The next main room and possible detention artwork preload; failed art retains labelled clue controls. Orange remains the action/focus color, and reduced motion suppresses arrival animation.
-
-**Mix in aptitude** is enabled for new rooms. Each room contains two existing math locks plus one reasoning lock: family relationships, direction sense, ranking/order, letter patterns, then logical deduction. Junior/Senior settings govern complexity. Family-tree diagrams have tappable/keyboard-operable people and highlight direct connections; all facts are also present in text. Four answer options use native radio controls. Select one, then press Unlock. Exploring a diagram does not buy a math hint or change time.
-
-The server generates the same seeded option order and question bank for every seat. A correct choice earns the normal +100 main points and +20 seconds; wrong choices incur the usual time penalty. Invalid/out-of-range choices incur no answer penalty. Bots use valid alternative choices for incorrect attempts. Race hints and solved explanations remain private. Existing JSON rooms default to aptitude off and keep their concrete bank. Turn the option off in the lobby for the original math-only game.
-
-Only the opening story changed to manual Next. The ten-second entry countdown, three-second Race room summary, and host-controlled Co-op room progression are unchanged.
-
-Run `npm test`, `npm run typecheck`, and `npm run build -- --webpack` locally. Run `GAME_TEST_URL=http://localhost:5174 node tests/aptitude-http.mjs` against a disposable preview database; it plays all five rooms using answers inferred from visible aptitude facts, checks private snapshots, and fetches all seven added artwork files. The original authored-bank integration suites explicitly turn aptitude off. The new rules tests independently check 500 seeds at each question level, option validation, bot scheduling, saved-room compatibility, and all eight scene configurations.
-
-Manual checks: keep chapter one open for more than twelve seconds and confirm it waits for Next; advance through all three chapters; create a mixed Race; click and keyboard-activate each hotspot; trace a family member; select/submit an option; clear a room and observe its new environment; enter detention and return. Check 390px portrait, focus visibility, no horizontal overflow, reduced motion, sound, and artwork failure fallback. Physical-device touch remains a separate check from browser viewport emulation.
-
-Three further proposals, with scope and validation ideas: [Next additions](docs/next-additions.md). They are suggestions, not implemented features or measured retention gains.
+Current feature branch: `codex/treasure-hunt`, based on `codex/room-worlds-aptitude`. This work does not publish or merge production. [Three future proposals](docs/next-additions.md) remain suggestions rather than implemented or measured retention improvements.

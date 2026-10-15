@@ -1,6 +1,6 @@
 import { waitForLab } from "./http-helpers.mjs";
 import assert from "node:assert/strict";
-import { PUZZLES } from "../lib/puzzles.ts";
+import { treasureRooms } from "../lib/treasure-hunt.ts";
 const origin = process.env.GAME_TEST_URL ?? "http://localhost:5173";
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 async function post(op, args = {}, session) {
@@ -35,7 +35,7 @@ for (let round = 1; round <= 2; round++) {
   assert.equal(start.status, 200, start.error);
   assert.equal(start.game.series.round, round);
   for (let room = 0; room < 5; room++) {
-    for (const q of PUZZLES.junior[room]) {
+    for (const q of treasureRooms("junior")[room]) {
       await pause(850);
       for (const p of [h, b]) {
         const view = await state(p);

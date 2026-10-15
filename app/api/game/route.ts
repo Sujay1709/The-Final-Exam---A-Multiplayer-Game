@@ -82,7 +82,7 @@ export async function POST(request: Request) {
           playerId,
           now,
           avatar,
-          settings,
+          { ...settings, freshPuzzles: false, aptitudePuzzles: false },
         );
         const saved = await database.createRoom(
           code,

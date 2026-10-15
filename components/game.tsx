@@ -28,6 +28,7 @@ import { RoomSettings } from "./room-settings";
 import { SeriesScoreboard } from "./series-scoreboard";
 import { LabEntry } from "./lab-entry";
 import { EscapeLab } from "./escape-lab";
+import { ScoreOrbit } from "./score-orbit";
 import { FamilyTree } from "./family-tree";
 import { GAME_RULES, minimumHumans } from "@/lib/game-settings";
 import { Avatar } from "./avatar";
@@ -221,8 +222,8 @@ export function Game({
         </div>
         <span className="session-difficulty">
           {g.difficulty === "junior"
-            ? "JUNIOR · CLASSES 5–8"
-            : "SENIOR · CLASSES 9–12"}
+            ? "CRYPTIC TREASURE HUNT"
+            : "EXPERT TREASURE HUNT"}
         </span>
         <div className={`connection ${connected ? "" : "offline"}`}>
           <Radio size={14} />
@@ -306,7 +307,7 @@ export function Game({
                   )}
                   <span>
                     {g.lastAnswer.correct
-                      ? `Lock opened! +20 seconds${g.lastAnswer.main ? " · +100 points" : ""}`
+                      ? `Lock opened! +20 seconds${g.lastAnswer.points ? ` · +${g.lastAnswer.points} points` : ""}`
                       : `Incorrect · −${rules.wrong} seconds. Try again.`}
                   </span>
                 </p>
@@ -701,7 +702,7 @@ export function Game({
                 <p className="race-status" role="status">
                   Next room opens automatically in{" "}
                   {Math.max(0, Math.ceil(((g.nextRoomAt ?? now) - now) / 1000))}{" "}
-                  seconds. Explanations remain in Your solved questions.
+                  seconds. Explanations remain in Your recovered clues.
                 </p>
               ) : host ? (
                 <button
@@ -814,7 +815,7 @@ export function Game({
                   aria-labelledby="clue-title"
                 >
                   <div className="puzzle-label">
-                    <span className="micro">{puzzle.topic.toUpperCase()}</span>
+                    <span className="micro">{puzzle.topic.toUpperCase()}{puzzle.rank ? ` · CLUE ${puzzle.rank} · ${puzzle.points} PTS` : ""}</span>
                     <span>
                       {g.puzzles.filter((p) => p.solved).length}/
                       {g.puzzles.length} locks open
@@ -909,7 +910,7 @@ export function Game({
                               placeholder="Enter your answer"
                               autoComplete="off"
                               enterKeyHint="go"
-                              maxLength={40}
+                              maxLength={puzzle.answerKind === "text" ? 80 : 40}
                               required
                               disabled={
                                 !!busy ||
@@ -941,10 +942,10 @@ export function Game({
                         <span>
                           {puzzle.choices
                             ? "Select an option, then unlock. Exploring the diagram is free."
-                            : "Numbers, decimals, or fractions. No units."}
+                            : puzzle.answerKind === "text" ? "Name the object or idea. Articles and letter case don’t matter." : "Numbers, decimals, or fractions. No units."}
                         </span>
                         <span>
-                          Correct +20s{!detention ? " / +100 pts" : ""} · Wrong
+                          Correct +20s / +{puzzle.points} pts · Wrong
                           −{rules.wrong}s
                         </span>
                       </div>
@@ -1024,7 +1025,7 @@ export function Game({
                                   : p.phase === "detention"
                                     ? `Detention ${p.punishment}`
                                     : `Room ${p.roomIndex + 1}`}{" "}
-                            · {p.solvedCount}/15 locks · {p.score} pts
+                            · {p.solvedCount}/15 clues
                           </small>
                         </div>
                       </li>
@@ -1034,15 +1035,8 @@ export function Game({
               </div>
             )}
 
-            <div className="score-panel">
-              <span className="micro">
-                {race ? "YOUR SCORE" : "TEAM SCORE"}
-              </span>
-              <strong>
-                {g.score.toLocaleString()}
-                <small>PTS</small>
-              </strong>
-            </div>
+            {g.phase !== "lobby" && <ScoreOrbit score={g.score} run={g.run}
+              team={!race} reducedMotion={preferences.reducedMotion} />}
             <div className="punishment-panel">
               <div className="sidebar-heading">
                 <ShieldAlert size={17} />
@@ -1115,7 +1109,7 @@ export function Game({
             </div>
             {!!g.review.length && (
               <details className="race-review">
-                <summary>Your solved questions</summary>
+                <summary>Your recovered clues</summary>
                 {g.review.map((q) => (
                   <article key={q.id}>
                     <span className="micro">{q.room}</span>

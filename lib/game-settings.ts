@@ -14,8 +14,8 @@ export const NEW_ROOM_SETTINGS: GameSettings = {
   gameDifficulty: "medium",
   botSkill: "medium",
   fillBots: true,
-  freshPuzzles: true,
-  aptitudePuzzles: true,
+  freshPuzzles: false,
+  aptitudePuzzles: false,
   bestOfThree: false,
 };
 export const LAB_ENTRY_SECONDS = 10;

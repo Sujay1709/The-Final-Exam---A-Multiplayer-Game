@@ -74,7 +74,7 @@ export function EscapeLab({
         </button>
       </div>
       <p className="lab-instructions">
-        {scene.atmosphere} Search the objects and solve every lock to escape.
+        {scene.atmosphere} Follow the trail: solve each riddle to reveal the next object. The later clues are tougher and worth more.
       </p>
       <div
         key={scene.id}
@@ -120,7 +120,7 @@ export function EscapeLab({
               id={`lab-object-${p.id}`}
               className={`lab-hotspot ${object.y > 60 ? "label-above" : ""} ${known ? "discovered" : ""} ${p.solved ? "solved" : ""} ${openingLock === p.id ? "lock-opening" : ""} ${selected === p.id ? "selected" : ""}`}
               style={{ left: `${object.x}%`, top: `${object.y}%` }}
-              aria-label={`${p.solved ? "Review" : "Search"} ${object.name.toLowerCase()}, clue ${i + 1}${p.locked ? ", solve both fragments first" : ""}`}
+              aria-label={`${p.solved ? "Review" : "Search"} ${object.name.toLowerCase()}, clue ${i + 1}${p.locked ? ", solve the previous clue first" : ""}`}
               aria-pressed={selected === p.id}
               disabled={disabled || p.locked}
               onClick={() => choose(p.id)}
@@ -168,7 +168,7 @@ export function EscapeLab({
                     : p.solved
                       ? "Lock opened · review clue"
                       : p.locked
-                        ? "Solve both fragments first"
+                        ? "Solve the previous clue first"
                         : discovered.includes(p.id)
                           ? p.title
                           : objects[i % objects.length].note}

@@ -21,6 +21,9 @@ export interface Player {
   working: string | null;
 }
 export interface PuzzleView {
+  answerKind: "text" | "number" | "choice";
+  rank: number | null;
+  points: number;
   id: string;
   title: string;
   topic: string;
@@ -39,6 +42,7 @@ export interface AnswerFeedback {
   playerId: string;
   correct: boolean;
   main: boolean;
+  points?: number;
   at: number;
 }
 export interface GameEvent {
@@ -84,6 +88,7 @@ export interface SeriesView {
   rounds: SeriesRound[];
 }
 export interface Snapshot extends GameSettings {
+  treasureHunt: boolean;
   series: SeriesView | null;
   rematchVotes: string[];
   accuracy: number | null;
@@ -126,36 +131,36 @@ export interface Session {
 export const ROOM_INFO = [
   {
     title: "The Abandoned Laboratory",
-    topic: "Arithmetic & patterns",
+    topic: "The first trail · riddles 1–3",
     quote:
       "A reunion? How touching. Take your seats. The door has other plans.",
     story:
       "The invitation promised a reunion dinner. Instead, three locks seal an abandoned science laboratory. Voss's old grade book sits open: your names are circled in green ink.",
   },
   {
-    title: "The Fraction Factory",
-    topic: "Fractions, ratios & percentages",
-    quote: "You took your share of my research. Now calculate mine.",
+    title: "The Alchemist’s Workshop",
+    topic: "Lost instruments · riddles 4–6",
+    quote: "Every object has a secret. Learn to listen.",
     story:
       "Behind the door: a laboratory of strange mixtures and incorrectly labelled bottles. An old photograph shows your college team celebrating a research prize. Voss has been cut out.",
   },
   {
-    title: "The Algebra Alarm",
-    topic: "Equations & powers",
+    title: "The Storm Engine",
+    topic: "The captive storm · riddles 7–9",
     quote: "There are unknowns in every betrayal. Find them.",
     story:
       "The alarms hum in unison. A framed research paper bears every teammate's name except Voss's. Below it is his handwritten draft, dated a year earlier.",
   },
   {
-    title: "The Geometry Trap",
-    topic: "Angles & measurements",
+    title: "The Hall of Reflections",
+    topic: "Things are not what they seem · riddles 10–12",
     quote: "Every friendship has an angle. Mine was apparently zero.",
     story:
-      "A grid of lights divides the laboratory. Beyond it, an unopened envelope reads: 'Elias, we tried to tell you.' Three measurements stand between you and the letter.",
+      "A grid of lights divides the laboratory. Beyond it, an unopened envelope reads: 'Elias, we tried to tell you.' Three riddles stand between you and the letter.",
   },
   {
     title: "The Final Exam",
-    topic: "The ultimate mixed challenge",
+    topic: "Buried truths · riddles 13–15",
     quote: "One final answer. Then we will see who deserves to leave.",
     story:
       "The letter reveals a printing error: his name was omitted, and the team tried to correct it. Voss never opened their messages. Solve the final locks and show him that cooperation was the answer all along.",

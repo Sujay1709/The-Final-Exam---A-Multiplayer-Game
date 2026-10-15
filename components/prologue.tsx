@@ -47,7 +47,7 @@ const SCENES = [
     image: "/story/manga-lab.png",
     alt: "Professor Voss wires a keypad and puzzle locks into his science laboratory, surrounded by green-lit equipment and reunion invitations.",
     narration:
-      "He wired the doors to number locks, set the countdowns, and built a detention room for missed deadlines. Then he invited his old teammates inside. You are the team that must escape.",
+      "He hid riddle trails behind the doors, set the countdowns, and built a detention room for missed deadlines. Then he invited his old teammates inside. You are the team that must escape.",
     dialogue: [
       {
         speaker: "PROFESSOR VOSS",

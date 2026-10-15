@@ -34,11 +34,11 @@ export const ROOM_SCENES: RoomScene[] = [
   },
   {
     id: "fraction-factory",
-    name: "The Fraction Factory",
+    name: "The Alchemist’s Workshop",
     image: "/lab/fraction-factory.webp",
     alt: "A towering teal mixing vat at left, measuring cylinders on the right bench, and brass balance scales on a central table.",
     atmosphere:
-      "The mixtures have settled. The pipes haven’t. Check every measure before the pressure rises.",
+      "The mixtures have settled. The pipes haven’t. Follow the lost instruments before the pressure rises.",
     objects: [
       {
         name: "Mixing vat",
@@ -63,7 +63,7 @@ export const ROOM_SCENES: RoomScene[] = [
   },
   {
     id: "algebra-alarm",
-    name: "The Algebra Alarm",
+    name: "The Storm Engine",
     image: "/lab/algebra-alarm.webp",
     alt: "An orange-lit control room with a switchboard at left, a generator in front, and a cracked computer console at right.",
     atmosphere:
@@ -87,11 +87,11 @@ export const ROOM_SCENES: RoomScene[] = [
   },
   {
     id: "geometry-trap",
-    name: "The Geometry Trap",
+    name: "The Hall of Reflections",
     image: "/lab/geometry-trap.webp",
     alt: "A violet geometry chamber with a glass prism at left, an angled mirror high on the right wall, and a raised floor tile.",
     atmosphere:
-      "Light draws the route. Angles, shapes, and a missing symbol stand between you and the door.",
+      "Light draws the route. Reflections, fragments, and a hidden message stand between you and the door.",
     objects: [
       { name: "Glass prism", note: "Inspect the prism pedestal", x: 16, y: 48 },
       {
@@ -167,7 +167,7 @@ export const DETENTION_SCENES: RoomScene[] = [
     objects: [
       {
         name: "Pressure gauge",
-        note: "Check the safety calculation",
+        note: "Read the safety riddle",
         x: 16,
         y: 35,
       },
@@ -186,13 +186,13 @@ export const DETENTION_SCENES: RoomScene[] = [
     image: "/lab/detention-probation.webp",
     alt: "A crimson vault with a torn code fragment on the left desk, a damaged terminal at right, and a keypad on the center pedestal.",
     atmosphere:
-      "Find both fragments, then combine them. This is Voss’s final warning.",
+      "Follow the forgotten letter from its envelope to its final witness. This is Voss’s final warning.",
     objects: [
-      { name: "Torn code fragment", note: "Recover fragment A", x: 14, y: 53 },
-      { name: "Damaged terminal", note: "Recover fragment B", x: 84, y: 40 },
+      { name: "Torn code fragment", note: "Find the letter’s guardian", x: 14, y: 53 },
+      { name: "Damaged terminal", note: "Find the traveling passenger", x: 84, y: 40 },
       {
         name: "Vault keypad",
-        note: "Combine both code fragments",
+        note: "Read the final postal clue",
         x: 51,
         y: 66,
       },

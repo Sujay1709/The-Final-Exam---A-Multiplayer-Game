@@ -32,8 +32,8 @@ const actions = [h, b].map((p) => ({
   op: "answer",
   ...p.session,
   phaseKey: key(start.game),
-  puzzleId: "j0a",
-  answer: "26",
+  puzzleId: "h0a",
+  answer: "key",
   id: crypto.randomUUID(),
 }));
 const results = await Promise.all(actions.map((a) => post(a)));
@@ -45,7 +45,7 @@ await post({
   op: "hint",
   ...h.session,
   phaseKey: key(again.game),
-  puzzleId: "j0b",
+  puzzleId: "h0b",
 });
 const guest = await post({ op: "state", ...b.session });
 assert.equal(guest.game.puzzles[1].hint, null);

@@ -2,7 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { generatePuzzleRooms, validatedVariation } from "../lib/puzzle-variations.ts";
 import { PUZZLES } from "../lib/puzzles.ts";
-import { createGame, joinGame, mutateGame, snapshot, currentPuzzles, phaseKey, advanceClock } from "../lib/game.ts";
+import { createGame } from "./legacy-game.ts";
+import { joinGame, mutateGame, snapshot, currentPuzzles, phaseKey, advanceClock } from "../lib/game.ts";
 import { defaultAvatar } from "../lib/profiles.ts";
 
 test("generated prompts satisfy their mathematics across 500 seeds and both levels", () => {
