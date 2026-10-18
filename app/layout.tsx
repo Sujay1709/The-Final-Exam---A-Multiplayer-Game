@@ -3,9 +3,9 @@ import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "The Professor’s Last Exam | Multiplayer Math Escape Room",
+  title: "The Professor’s Last Exam | Multiplayer Treasure Hunt",
   description:
-    "An old grudge. Five locked rooms. A timed multiplayer math escape room for 2–8 players.",
+    "An old grudge. Five locked rooms. A timed multiplayer treasure-hunt escape room for 2–8 players.",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",

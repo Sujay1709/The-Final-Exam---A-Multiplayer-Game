@@ -12,7 +12,7 @@ import { LAB_ENTRY_SECONDS } from "@/lib/game-settings";
 const steps = [
   { label: "Sealing the reunion doors", icon: DoorClosed },
   { label: "Restoring emergency power", icon: Radio },
-  { label: "Hiding the professor’s math clues", icon: FlaskConical },
+  { label: "Hiding the professor’s treasure clues", icon: FlaskConical },
   { label: "Arming the escape locks", icon: LockKeyhole },
 ];
 export function LabEntry({

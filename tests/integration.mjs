@@ -13,7 +13,7 @@ async function request(op, args = {}, session) {
 const created = await request("create", {
   name: "Integration Host",
   mode:"coop",
-  freshPuzzles:false,
+  freshPuzzles:false, aptitudePuzzles:false,
   difficulty: "junior",
 });
 assert.equal(created.status, 200, created.error);
@@ -43,7 +43,7 @@ assert.equal(started.status, 200, started.error);
 const key = `${started.game.run}:main:0:0`;
 const submissions = await Promise.all(
   players.map((p) =>
-    request("answer", { puzzleId: "j0a", answer: "26", phaseKey: key }, p),
+    request("answer", { puzzleId: "h0a", answer: "key", phaseKey: key }, p),
   ),
 );
 submissions.forEach((r) => assert.equal(r.status, 200, r.error));
@@ -53,7 +53,7 @@ assert.equal(state.game.deadline, started.game.deadline + 20000);
 assert.ok(state.game.players.every((p) => !("token" in p)));
 assert.ok(state.game.puzzles.every((p) => !("answer" in p)));
 const hints = await Promise.all(
-  players.map((p) => request("hint", { puzzleId: "j0b", phaseKey: key }, p)),
+  players.map((p) => request("hint", { puzzleId: "h0b", phaseKey: key }, p)),
 );
 hints.forEach((r) => assert.equal(r.status, 200, r.error));
 state = await request("state", {}, host);
@@ -71,31 +71,31 @@ await new Promise((resolve) => setTimeout(resolve, 850));
 const replayId = randomUUID();
 const wrong = await request(
   "answer",
-  { id: replayId, puzzleId: "j0c", answer: "999", phaseKey: key },
+  { id: replayId, puzzleId: "h0b", answer: "wrong guess", phaseKey: key },
   players[2],
 );
 assert.equal(wrong.status, 200, wrong.error);
 const replay = await request(
   "answer",
-  { id: replayId, puzzleId: "j0c", answer: "999", phaseKey: key },
+  { id: replayId, puzzleId: "h0b", answer: "wrong guess", phaseKey: key },
   players[2],
 );
 assert.equal(replay.game.wrongCount, 1);
 assert.equal(replay.game.deadline, wrong.game.deadline);
 // One deliberate pause honours the per-player submission interval.
 await new Promise((resolve) => setTimeout(resolve, 850));
-const remaining = await Promise.all([
-  request(
+const remaining = [
+  await request(
     "answer",
-    { puzzleId: "j0b", answer: "24", phaseKey: key },
+    { puzzleId: "h0b", answer: "candle", phaseKey: key },
     players[3],
   ),
-  request(
+  await request(
     "answer",
-    { puzzleId: "j0c", answer: "37", phaseKey: key },
+    { puzzleId: "h0c", answer: "echo", phaseKey: key },
     players[4],
   ),
-]);
+];
 remaining.forEach((r) => assert.equal(r.status, 200, r.error));
 state = await request("state", {}, host);
 assert.equal(state.game.phase, "cleared");
@@ -113,7 +113,7 @@ assert.equal(
   (
     await request(
       "answer",
-      { puzzleId: "j0a", answer: "26", phaseKey: key },
+      { puzzleId: "h0a", answer: "key", phaseKey: key },
       host,
     )
   ).status,

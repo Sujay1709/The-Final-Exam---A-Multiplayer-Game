@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Pause, Play, Film, Volume2, VolumeX } from "lucide-react";
+import { Pause, Play, Film, Volume2, VolumeX, ArrowRight } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -47,7 +47,7 @@ const SCENES = [
     image: "/story/manga-lab.png",
     alt: "Professor Voss wires a keypad and puzzle locks into his science laboratory, surrounded by green-lit equipment and reunion invitations.",
     narration:
-      "He wired the doors to number locks, set the countdowns, and built a detention room for missed deadlines. Then he invited his old teammates inside. You are the team that must escape.",
+      "He hid riddle trails behind the doors, set the countdowns, and built a detention room for missed deadlines. Then he invited his old teammates inside. You are the team that must escape.",
     dialogue: [
       {
         speaker: "PROFESSOR VOSS",
@@ -78,7 +78,7 @@ const STORY_SCORE = [
   },
 ] as const;
 
-// Each chapter receives twelve visible, unpaused seconds. No forward/skip path.
+// Chapters advance only on Next. Audio/animation may pause or loop independently.
 export function Prologue({
   open,
   onClose,
@@ -97,8 +97,8 @@ export function Prologue({
     [playing, setPlaying] = useState(false),
     [sound, setSound] = useState(soundPreference),
     [reduced, setReduced] = useState(false),
-    [visible, setVisible] = useState(true),
-    [elapsed, setElapsed] = useState(0);
+    [visible, setVisible] = useState(true);
+  const caption = useRef<HTMLHeadingElement>(null);
   const elapsedRef = useRef(0),
     audio = useRef<AudioContext | null>(null),
     complete = useRef(onClose);
@@ -124,7 +124,6 @@ export function Prologue({
     setStarted(false);
     setPlaying(false);
     elapsedRef.current = 0;
-    setElapsed(0);
     SCENES.forEach((s) => {
       const i = new Image();
       i.src = s.image;
@@ -135,20 +134,22 @@ export function Prologue({
     let last = performance.now();
     const tick = setInterval(() => {
       const now = performance.now();
-      elapsedRef.current += now - last;
+      elapsedRef.current = (elapsedRef.current + now - last) % 12000;
       last = now;
-      setElapsed(elapsedRef.current);
-      if (elapsedRef.current >= 12000) {
-        elapsedRef.current = 0;
-        setElapsed(0);
-        if (scene === 2) {
-          setPlaying(false);
-          complete.current();
-        } else setScene((i) => i + 1);
-      }
     }, 100);
     return () => clearInterval(tick);
   }, [open, started, playing, visible, scene]);
+  useEffect(() => {
+    if (open && started) caption.current?.focus({ preventScroll: true });
+  }, [scene, started, open]);
+  function nextChapter() {
+    if (!started) return;
+    elapsedRef.current = 0;
+    if (scene === SCENES.length - 1) {
+      setPlaying(false);
+      complete.current();
+    } else setScene((i) => i + 1);
+  }
   // Web Audio keeps the score local and lets pause, mute, and tab visibility stop it.
   useEffect(() => {
     const ctx = audio.current;
@@ -156,7 +157,10 @@ export function Prologue({
     const score = STORY_SCORE[scene];
     const master = ctx.createGain();
     master.gain.setValueAtTime(0, ctx.currentTime);
-    master.gain.linearRampToValueAtTime(0.055 + scene * 0.008, ctx.currentTime + 0.35);
+    master.gain.linearRampToValueAtTime(
+      0.055 + scene * 0.008,
+      ctx.currentTime + 0.35,
+    );
     master.connect(ctx.destination);
     const filter = ctx.createBiquadFilter();
     filter.type = "lowpass";
@@ -261,13 +265,12 @@ export function Prologue({
               Before the doors locked.
             </DialogTitle>
           </div>
-          <span className="micro">36 SECOND OPENING</span>
+          <span className="micro">YOUR PACE · 3 CHAPTERS</span>
         </div>
         <DialogDescription className="sr-only">
-          A mandatory cinematic with three automatically advancing manga
-          chapters. Start playback, pause, or control sound. The homepage opens
-          after all chapters. Reduced motion removes camera movement without
-          skipping the story.
+          Three manga chapters in order. Start the story, read each chapter, and
+          press Next when you are ready. The final button opens the game. Pause
+          and sound controls affect animation and music, not navigation.
         </DialogDescription>
         <div
           className="story-chapters cinematic-chapters"
@@ -313,17 +316,21 @@ export function Prologue({
             <div
               className="cinematic-progress"
               role="progressbar"
-              aria-label="Chapter playback"
-              aria-valuenow={Math.min(100, Math.round(elapsed / 120))}
+              aria-label="Story chapter progress"
+              aria-valuenow={Math.round(((scene + 1) / SCENES.length) * 100)}
               aria-valuemin={0}
               aria-valuemax={100}
             >
-              <span style={{ width: `${Math.min(100, elapsed / 120)}%` }} />
+              <span
+                style={{ width: `${((scene + 1) / SCENES.length) * 100}%` }}
+              />
             </div>
           </div>
           <div className="story-caption" aria-live="polite" aria-atomic="true">
             <span className="micro">{current.when}</span>
-            <h2>{current.title}</h2>
+            <h2 ref={caption} tabIndex={-1}>
+              {current.title}
+            </h2>
             <p>{current.narration}</p>
           </div>
         </div>
@@ -353,9 +360,15 @@ export function Prologue({
               Start story
             </button>
           )}
+          {started && (
+            <button className="primary-button story-next" onClick={nextChapter}>
+              {scene === SCENES.length - 1 ? "Enter the game" : "Next chapter"}
+              <ArrowRight size={18} aria-hidden="true" />
+            </button>
+          )}
           <span className="micro">
             {started
-              ? `CHAPTER ${scene + 1} / 3 · ${playing ? "PLAYING" : "PAUSED"}`
+              ? `CHAPTER ${scene + 1} / 3 · ${playing ? "MUSIC / MOTION PLAYING" : "MUSIC / MOTION PAUSED"}`
               : "ORIGINAL LAB SOUNDSCAPE"}
           </span>
         </div>

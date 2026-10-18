@@ -1,8 +1,8 @@
 import { defaultAvatar } from "../lib/profiles.ts";
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { createGame } from "./legacy-game.ts";
 import {
-  createGame,
   mutateGame,
   advanceClock,
   snapshot,
@@ -141,7 +141,7 @@ test("three escalations gate the decode step and the fourth main timeout ends th
     assert.equal(g.punishment, level);
     assert.equal(g.deadline, now + [60000, 90000, 120000][level - 1]);
     if (level === 3)
-      assert.throws(() => answer(g, "d3c", 67, now + 1000), /fragments/);
+      assert.throws(() => answer(g, "d3c", 67, now + 1000), /previous clue/);
     for (const p of DETENTION[level - 1]) {
       now += 1000;
       answer(g, p.id, p.answer, now);

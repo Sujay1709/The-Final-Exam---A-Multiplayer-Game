@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createGame, joinGame, mutateGame, phaseKey, snapshot, advanceClock } from "../lib/game.ts";
+import { createGame } from "./legacy-game.ts";
+import { joinGame, mutateGame, phaseKey, snapshot, advanceClock } from "../lib/game.ts";
 import { defaultAvatar } from "../lib/profiles.ts";
 const T = 1000000;
 test("streaks are cosmetic, private in Race, shared in Co-op, and replay safe", () => {

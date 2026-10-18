@@ -1,4 +1,6 @@
-import { PUZZLES, DETENTION, type Puzzle } from "./puzzles.ts";
+import { PUZZLES, DETENTION } from "./puzzles.ts";
+import { isRiddle, matchesRiddle, normalizeRiddleAnswer, treasureRooms, treasureDetention, type GamePuzzle } from "./treasure-hunt.ts";
+import { withAptitude } from "./aptitude-puzzles.ts";
 import { generatePuzzleRooms } from "./puzzle-variations.ts";
 import {
   ROOM_INFO,
@@ -65,7 +67,8 @@ export interface GameState extends Progress, GameSettings {
   seed: number;
   winnerId: string | null;
   finishCount: number;
-  puzzleRooms?: Puzzle[][];
+  puzzleRooms?: GamePuzzle[][];
+  puzzleKind?: "treasure" | "legacy";
   series: SeriesView | null;
   rematchVotes: string[];
   entryAt: number | null;
@@ -131,11 +134,13 @@ function event(
 }
 export function normalizeGame(g: GameState): GameState {
   // Old JSON rooms preserve their approved cooperative rules.
+  g.puzzleKind ??= "legacy";
   g.mode ??= "coop";
   g.gameDifficulty ??= "medium";
   g.botSkill ??= "medium";
   g.fillBots ??= false;
   g.freshPuzzles ??= false;
+  g.aptitudePuzzles ??= false;
   g.bestOfThree ??= false;
   g.series ??= null;
   // Readiness from the old host-start lobby does not imply consent to an
@@ -184,8 +189,10 @@ export function createGame(
       botSkill: "medium",
       fillBots: false,
       freshPuzzles: false,
+      aptitudePuzzles: false,
       bestOfThree: false,
     }),
+    puzzleKind: "treasure",
     code,
     difficulty,
     hostId: id,
@@ -285,7 +292,10 @@ export function joinGame(
   });
   syncBots(g);
 }
-export function currentPuzzles(g: GameState, p: Progress = g): Puzzle[] {
+export function currentPuzzles(g: GameState, p: Progress = g): GamePuzzle[] {
+  if (g.puzzleKind === "treasure") return p.phase === "detention"
+    ? treasureDetention(p.punishment)
+    : (g.puzzleRooms ?? treasureRooms(g.difficulty))[p.roomIndex];
   return p.phase === "detention"
     ? DETENTION[p.punishment - 1]
     : (g.puzzleRooms ?? PUZZLES[g.difficulty])[p.roomIndex];
@@ -319,7 +329,7 @@ function timeout(g: GameState, p: Progress, at: number) {
   }
   p.phase = "detention";
   p.deadline = at + rules.detention[p.punishment - 1] * 1000;
-  DETENTION[p.punishment - 1].forEach((q) => {
+  currentPuzzles(g, p).forEach((q) => {
     delete p.solved[q.id];
     p.hinted = p.hinted.filter((id) => id !== q.id);
   });
@@ -355,22 +365,24 @@ function solve(
   g: GameState,
   p: Progress,
   player: PrivatePlayer,
-  puzzle: Puzzle,
-  value: number,
+  puzzle: GamePuzzle,
+  value: number | string,
   at: number,
 ) {
   if (p.solved[puzzle.id]) return;
   if (!p.discovered.includes(puzzle.id)) p.discovered.push(puzzle.id);
   const rules = GAME_RULES[g.gameDifficulty];
-  const correct =
-    Math.abs(value - puzzle.answer) <=
-    1e-7 * Math.max(1, Math.abs(puzzle.answer));
+  const correct = isRiddle(puzzle)
+    ? typeof value === "string" && matchesRiddle(puzzle, value)
+    : typeof value === "number" && Math.abs(value - puzzle.answer) <= 1e-7 * Math.max(1, Math.abs(puzzle.answer));
+  const points = isRiddle(puzzle) ? puzzle.points : p.phase === "main" ? 100 : 0;
   p.lastAnswerFeedback = {
     id: `${g.run}:${player.id}:${p.correctCount + p.wrongCount + 1}`,
     puzzleId: puzzle.id,
     playerId: player.id,
     correct,
     main: p.phase === "main",
+    points: correct ? points : 0,
     at,
   };
   if (correct) {
@@ -379,7 +391,7 @@ function solve(
     p.bestStreak = Math.max(p.bestStreak, p.streak);
     p.solved[puzzle.id] = player.id;
     p.deadline! += 20000;
-    if (p.phase === "main") p.score += 100;
+    p.score += points;
     g.players
       .filter(
         (x) =>
@@ -388,7 +400,7 @@ function solve(
       .forEach((x) => (x.working = null));
     event(
       p,
-      `${player.name} solved ${puzzle.title}. +20 seconds${p.phase === "main" ? ", +100 points" : ""}.`,
+      `${player.name} solved ${puzzle.title}. +20 seconds${points ? `, +${points} points` : ""}.`,
       "success",
       at,
     );
@@ -480,12 +492,18 @@ function canBegin(g: GameState, now: number) {
   );
 }
 function beginCountdown(g: GameState, now: number) {
-  g.puzzleRooms = g.freshPuzzles
-    ? generatePuzzleRooms(
-        g.difficulty,
-        (g.seed ^ Math.imul(g.run, 2654435761)) >>> 0,
-      )
-    : undefined;
+  const seed = (g.seed ^ Math.imul(g.run, 2654435761)) >>> 0;
+  if (g.puzzleKind === "treasure") g.puzzleRooms = treasureRooms(g.difficulty);
+  else {
+  const mathRooms = g.freshPuzzles
+    ? generatePuzzleRooms(g.difficulty, seed)
+    : PUZZLES[g.difficulty];
+  g.puzzleRooms = g.aptitudePuzzles
+    ? withAptitude(mathRooms, g.difficulty, seed)
+    : g.freshPuzzles
+      ? mathRooms
+      : undefined;
+  }
   g.phase = "loading";
   g.entryAt = now + LAB_ENTRY_SECONDS * 1000;
   if (g.bestOfThree && !g.series) {
@@ -612,7 +630,9 @@ export function advanceClock(g: GameState, now: number) {
           q,
           random(player) < BOT_RULES[g.botSkill].accuracy
             ? q.answer
-            : q.answer + 1,
+            : isRiddle(q) ? "incorrect guess" : q.choices
+              ? (q.answer % q.choices.length) + 1
+              : q.answer + 1,
           at,
         );
       if (!terminal(p) && p.phase !== "cleared") schedule(g, player, at);
@@ -748,6 +768,7 @@ export function mutateGame(g: GameState, a: Action, now: number): GameState {
         botSkill: a.botSkill ?? g.botSkill,
         fillBots: a.fillBots ?? g.fillBots,
         freshPuzzles: a.freshPuzzles ?? g.freshPuzzles,
+        aptitudePuzzles: a.aptitudePuzzles ?? g.aptitudePuzzles,
         bestOfThree: a.bestOfThree ?? g.bestOfThree,
       });
     } catch (e) {
@@ -758,6 +779,7 @@ export function mutateGame(g: GameState, a: Action, now: number): GameState {
       !["junior", "senior"].includes(a.difficulty)
     )
       throw new GameError("Choose Junior or Senior.");
+    if (g.puzzleKind === "treasure") { settings.freshPuzzles = false; settings.aptitudePuzzles = false; }
     Object.assign(g, settings);
     if (a.difficulty) g.difficulty = a.difficulty as Difficulty;
     humans.forEach((x) => (x.ready = false));
@@ -894,7 +916,7 @@ export function mutateGame(g: GameState, a: Action, now: number): GameState {
     if (!q) throw new GameError("That lock does not belong to this room.");
     if (p.solved[q.id]) return g;
     if (q.requires?.some((id) => !p.solved[id]))
-      throw new GameError("Solve both code fragments first.");
+      throw new GameError("Solve the previous clue first.");
     if (!p.discovered.includes(q.id)) p.discovered.push(q.id);
     if (a.op === "claim") player.working = q.id;
     if (a.op === "hint" && !p.hinted.includes(q.id)) {
@@ -910,10 +932,18 @@ export function mutateGame(g: GameState, a: Action, now: number): GameState {
       if (p.deadline! <= now) timeout(g, p, now);
     }
     if (a.op === "answer") {
-      const value = parseAnswer(a.answer);
+      const value = isRiddle(q) ? normalizeRiddleAnswer(a.answer) : parseAnswer(a.answer);
+      if (
+        !isRiddle(q) && q.choices &&
+        (value === null ||
+          typeof value !== "number" || !Number.isInteger(value) ||
+          value < 1 ||
+          value > q.choices.length)
+      )
+        throw new GameError("Choose one of the displayed answer options.");
       if (value === null)
         throw new GameError(
-          "Enter a number, decimal, or fraction such as 3/8. Leave out units.",
+          isRiddle(q) ? "Name the object or idea in 1–80 letters. Leave out sentences and numbers." : "Enter a number, decimal, or fraction such as 3/8. Leave out units.",
         );
       if (now - player.lastAnswer < 800)
         throw new GameError("Take a moment before submitting again.", 429);
@@ -967,7 +997,7 @@ export function snapshot(
               a.playerId.localeCompare(b.playerId),
           )
       : [];
-  const review = (g.puzzleRooms ?? PUZZLES[g.difficulty]).flatMap(
+  const review = (g.puzzleRooms ?? (g.puzzleKind === "treasure" ? treasureRooms(g.difficulty) : PUZZLES[g.difficulty])).flatMap(
     (questions, i) =>
       questions
         .filter((q) => p.solved[q.id])
@@ -980,6 +1010,7 @@ export function snapshot(
         })),
   );
   return {
+    treasureHunt: g.puzzleKind === "treasure",
     code: g.code,
     difficulty: g.difficulty,
     mode: g.mode,
@@ -987,6 +1018,7 @@ export function snapshot(
     botSkill: g.botSkill,
     fillBots: g.fillBots,
     freshPuzzles: g.freshPuzzles,
+    aptitudePuzzles: g.aptitudePuzzles,
     bestOfThree: g.bestOfThree,
     series: g.series
       ? {
@@ -1045,6 +1077,11 @@ export function snapshot(
             title: q.title,
             topic: q.topic,
             prompt: q.prompt,
+            answerKind: isRiddle(q) ? "text" : q.choices ? "choice" : "number",
+            rank: isRiddle(q) ? q.rank : null,
+            points: isRiddle(q) ? q.points : p.phase === "main" ? 100 : 0,
+            choices: !isRiddle(q) && q.choices ? [...q.choices] : null,
+            diagram: !isRiddle(q) && q.diagram ? structuredClone(q.diagram) : null,
             solved: !!p.solved[q.id],
             solvedBy: p.solved[q.id] ?? null,
             hint: p.hinted.includes(q.id) || end ? q.hint : null,

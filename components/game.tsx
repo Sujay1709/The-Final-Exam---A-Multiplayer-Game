@@ -28,6 +28,8 @@ import { RoomSettings } from "./room-settings";
 import { SeriesScoreboard } from "./series-scoreboard";
 import { LabEntry } from "./lab-entry";
 import { EscapeLab } from "./escape-lab";
+import { ScoreOrbit } from "./score-orbit";
+import { FamilyTree } from "./family-tree";
 import { GAME_RULES, minimumHumans } from "@/lib/game-settings";
 import { Avatar } from "./avatar";
 import type { Preferences } from "@/lib/use-preferences";
@@ -220,8 +222,8 @@ export function Game({
         </div>
         <span className="session-difficulty">
           {g.difficulty === "junior"
-            ? "JUNIOR · CLASSES 5–8"
-            : "SENIOR · CLASSES 9–12"}
+            ? "CRYPTIC TREASURE HUNT"
+            : "EXPERT TREASURE HUNT"}
         </span>
         <div className={`connection ${connected ? "" : "offline"}`}>
           <Radio size={14} />
@@ -305,7 +307,7 @@ export function Game({
                   )}
                   <span>
                     {g.lastAnswer.correct
-                      ? `Lock opened! +20 seconds${g.lastAnswer.main ? " · +100 points" : ""}`
+                      ? `Lock opened! +20 seconds${g.lastAnswer.points ? ` · +${g.lastAnswer.points} points` : ""}`
                       : `Incorrect · −${rules.wrong} seconds. Try again.`}
                   </span>
                 </p>
@@ -364,16 +366,18 @@ export function Game({
               </div>
               <div className="lobby-actions">
                 <button
-                  className={me?.ready ? "secondary-button" : "primary-button"}
+                  className={`ready-control ${me?.ready ? "is-ready" : ""}`}
+                  aria-pressed={!!me?.ready}
+                  aria-busy={busy === "ready"}
                   disabled={!!busy || !connected}
                   onClick={() => void action("ready", { ready: !me?.ready })}
                 >
                   {busy === "ready" ? (
                     <Loader2 size={17} className="loading-spin" />
                   ) : (
-                    <Check size={17} />
-                  )}{" "}
-                  {me?.ready ? "Ready · click to undo" : "I'm ready"}
+                    <span className="ready-check"><Check size={24} aria-hidden="true" /></span>
+                  )}
+                  <span><strong>{me?.ready ? "You’re ready" : "I'm ready"}</strong><small>{me?.ready ? "Tap to undo" : "Tap to join the countdown"}</small></span>
                 </button>
                 <span className="lobby-auto-start">
                   <Clock3 size={18} aria-hidden="true" />
@@ -700,7 +704,7 @@ export function Game({
                 <p className="race-status" role="status">
                   Next room opens automatically in{" "}
                   {Math.max(0, Math.ceil(((g.nextRoomAt ?? now) - now) / 1000))}{" "}
-                  seconds. Explanations remain in Your solved questions.
+                  seconds. Explanations remain in Your recovered clues.
                 </p>
               ) : host ? (
                 <button
@@ -778,6 +782,7 @@ export function Game({
                 </div>
               </div>
               <EscapeLab
+                key={`${g.run}:${g.roomIndex}:${detention ? g.punishment : 0}`}
                 puzzles={g.puzzles}
                 discovered={g.discovered}
                 activity={Object.fromEntries(
@@ -799,6 +804,7 @@ export function Game({
                 openingLock={openingLock}
                 selected={selected}
                 detention={detention}
+                punishment={g.punishment}
                 roomIndex={g.roomIndex}
                 disabled={!!busy || !connected || seconds === 0}
                 choose={choose}
@@ -811,7 +817,7 @@ export function Game({
                   aria-labelledby="clue-title"
                 >
                   <div className="puzzle-label">
-                    <span className="micro">{puzzle.topic.toUpperCase()}</span>
+                    <span className="micro">{puzzle.topic.toUpperCase()}{puzzle.rank ? ` · CLUE ${puzzle.rank} · ${puzzle.points} PTS` : ""}</span>
                     <span>
                       {g.puzzles.filter((p) => p.solved).length}/
                       {g.puzzles.length} locks open
@@ -830,6 +836,12 @@ export function Game({
                   </div>
                   <h3 id="clue-title">{puzzle.title}</h3>
                   <p className="question">{puzzle.prompt}</p>
+                  {puzzle.diagram && (
+                    <FamilyTree
+                      key={`${stateKey}:${puzzle.id}`}
+                      diagram={puzzle.diagram}
+                    />
+                  )}
                   {puzzle.solved ? (
                     <div className="solved-answer">
                       <Check size={20} />
@@ -840,31 +852,77 @@ export function Game({
                     </div>
                   ) : (
                     <>
-                      <form className="answer-form" onSubmit={submit}>
-                        <label className="answer-label" htmlFor="answer">
-                          Your answer
-                        </label>
-                        <input
-                          id="answer"
-                          value={drafts[inputKey] ?? ""}
-                          onChange={(e) =>
-                            setDrafts((d) => ({
-                              ...d,
-                              [inputKey]: e.target.value,
-                            }))
-                          }
-                          placeholder="Enter your answer"
-                          autoComplete="off"
-                          enterKeyHint="go"
-                          maxLength={40}
-                          required
-                          disabled={
-                            !!busy ||
-                            !connected ||
-                            seconds === 0 ||
-                            puzzle.locked
-                          }
-                        />
+                      <form
+                        className={`answer-form ${puzzle.choices ? "choice-answer-form" : ""}`}
+                        onSubmit={submit}
+                      >
+                        {puzzle.choices ? (
+                          <fieldset
+                            className="answer-options"
+                            disabled={
+                              !!busy ||
+                              !connected ||
+                              seconds === 0 ||
+                              puzzle.locked
+                            }
+                          >
+                            <legend>Your answer · select one option</legend>
+                            {puzzle.choices.map((choice, i) => (
+                              <label
+                                key={choice}
+                                className={`answer-option ${drafts[inputKey] === String(i + 1) ? "selected" : ""}`}
+                              >
+                                <input
+                                  type="radio"
+                                  name={`choice-${inputKey}`}
+                                  value={String(i + 1)}
+                                  checked={drafts[inputKey] === String(i + 1)}
+                                  onChange={(e) =>
+                                    setDrafts((d) => ({
+                                      ...d,
+                                      [inputKey]: e.target.value,
+                                    }))
+                                  }
+                                  required
+                                />
+                                <span
+                                  className="choice-letter"
+                                  aria-hidden="true"
+                                >
+                                  {String.fromCharCode(65 + i)}
+                                </span>
+                                <span>{choice}</span>
+                              </label>
+                            ))}
+                          </fieldset>
+                        ) : (
+                          <>
+                            <label className="answer-label" htmlFor="answer">
+                              Your answer
+                            </label>
+                            <input
+                              id="answer"
+                              value={drafts[inputKey] ?? ""}
+                              onChange={(e) =>
+                                setDrafts((d) => ({
+                                  ...d,
+                                  [inputKey]: e.target.value,
+                                }))
+                              }
+                              placeholder="Enter your answer"
+                              autoComplete="off"
+                              enterKeyHint="go"
+                              maxLength={puzzle.answerKind === "text" ? 80 : 40}
+                              required
+                              disabled={
+                                !!busy ||
+                                !connected ||
+                                seconds === 0 ||
+                                puzzle.locked
+                              }
+                            />
+                          </>
+                        )}
                         <button
                           className="primary-button"
                           disabled={
@@ -883,9 +941,13 @@ export function Game({
                         </button>
                       </form>
                       <div className="answer-guidance">
-                        <span>Numbers, decimals, or fractions. No units.</span>
                         <span>
-                          Correct +20s{!detention ? " / +100 pts" : ""} · Wrong
+                          {puzzle.choices
+                            ? "Select an option, then unlock. Exploring the diagram is free."
+                            : puzzle.answerKind === "text" ? "Name the object or idea. Articles and letter case don’t matter." : "Numbers, decimals, or fractions. No units."}
+                        </span>
+                        <span>
+                          Correct +20s / +{puzzle.points} pts · Wrong
                           −{rules.wrong}s
                         </span>
                       </div>
@@ -965,7 +1027,7 @@ export function Game({
                                   : p.phase === "detention"
                                     ? `Detention ${p.punishment}`
                                     : `Room ${p.roomIndex + 1}`}{" "}
-                            · {p.solvedCount}/15 locks · {p.score} pts
+                            · {p.solvedCount}/15 clues
                           </small>
                         </div>
                       </li>
@@ -975,15 +1037,8 @@ export function Game({
               </div>
             )}
 
-            <div className="score-panel">
-              <span className="micro">
-                {race ? "YOUR SCORE" : "TEAM SCORE"}
-              </span>
-              <strong>
-                {g.score.toLocaleString()}
-                <small>PTS</small>
-              </strong>
-            </div>
+            {g.phase !== "lobby" && <ScoreOrbit score={g.score} run={g.run}
+              team={!race} reducedMotion={preferences.reducedMotion} />}
             <div className="punishment-panel">
               <div className="sidebar-heading">
                 <ShieldAlert size={17} />
@@ -1056,7 +1111,7 @@ export function Game({
             </div>
             {!!g.review.length && (
               <details className="race-review">
-                <summary>Your solved questions</summary>
+                <summary>Your recovered clues</summary>
                 {g.review.map((q) => (
                   <article key={q.id}>
                     <span className="micro">{q.room}</span>

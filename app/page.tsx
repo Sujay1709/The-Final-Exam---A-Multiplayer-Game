@@ -25,10 +25,12 @@ import { Toaster } from "@/components/ui/sonner";
 import { useGameTools } from "@/lib/webmcp";
 import { usePreferences } from "@/lib/use-preferences";
 import { ProfileEditor, AliasButton } from "@/components/profile-editor";
+import { TouchToggle } from "@/components/touch-controls";
 import { RoomSettings } from "@/components/room-settings";
 import { NEW_ROOM_SETTINGS, type GameSettings } from "@/lib/game-settings";
 import type { Difficulty } from "@/lib/game-types";
 import { Settings2 } from "lucide-react";
+import { ProfessorDossier } from "@/components/professor-dossier";
 import { Professor } from "@/components/professor";
 import { Prologue } from "@/components/prologue";
 export default function Home() {
@@ -77,7 +79,7 @@ export default function Home() {
             >
               <Settings2 size={18} />
             </button>
-            <span className="edition">MULTIPLAYER MATH ESCAPE</span>
+            <span className="edition">MULTIPLAYER TREASURE HUNT</span>
             {(!api.game || !["main", "detention"].includes(api.game.phase)) && (
               <button
                 className="text-button backstory-link"
@@ -116,7 +118,7 @@ export default function Home() {
               <p className="intro">
                 An old grudge. Five locked rooms.
                 <br />
-                Your only way out? <strong>Do the math.</strong>
+                Your only way out? <strong>Follow the hidden trail.</strong>
               </p>
               <div className="game-facts">
                 <span>
@@ -284,12 +286,13 @@ export default function Home() {
                 <blockquote>
                   “You copied my work once.
                   <br />
-                  This time, show your working.”
+                  This time, read between the lines.”
                 </blockquote>
                 <div className="professor-signature">
                   E. Voss <span>DEPARTMENT OF UNFINISHED BUSINESS</span>
                 </div>
               </div>
+              <ProfessorDossier />
               <span className="art-caption">
                 FIG. 01 — THE MAN BEHIND THE LOCKS
               </span>
@@ -306,22 +309,10 @@ export default function Home() {
             <DialogDescription>
               Saved on this browser. Character changes apply only in the lobby.
             </DialogDescription>
-            <label className="preference-toggle">
-              <input
-                type="checkbox"
-                checked={preferences.sound}
-                onChange={(e) => update({ sound: e.target.checked })}
-              />
-              Game sounds
-            </label>
-            <label className="preference-toggle">
-              <input
-                type="checkbox"
-                checked={preferences.reducedMotion}
-                onChange={(e) => update({ reducedMotion: e.target.checked })}
-              />
-              Reduce motion
-            </label>
+            <TouchToggle title="Game sounds" detail="Hear lock openings and warning cues."
+              checked={preferences.sound} onChange={sound => update({sound})}/>
+            <TouchToggle title="Reduce motion" detail="Keep feedback calm without 3D movement."
+              checked={preferences.reducedMotion} onChange={reducedMotion => update({reducedMotion})}/>
             {(!api.game || api.game.phase === "lobby") && (
               <>
                 <label className="settings-field">
@@ -385,9 +376,9 @@ export default function Home() {
           </DialogDescription>
           <ol className="rules-list">
             <li>
-              Two to eight humans join by code. Two connected, ready humans are
-              required to start. Race can fill the remaining seats with clearly
-              labelled bots.
+              Join by code with up to eight humans. Race with bots permits one
+              human; Co-op and Race without bots require two. Everyone readies
+              up, then a ten-second countdown begins automatically.
             </li>
             <li>
               Five rooms, three locks each. Race gives each player independent
@@ -396,11 +387,16 @@ export default function Home() {
               lets the host open each next room.
             </li>
             <li>
-              Junior is classes 5–8; Senior is classes 9–12. Time pressure is
-              separate: Easy / Medium / Hard start at 5 / 4 / 3 minutes.
+              Search objects for “What am I?” riddles. Type the object or idea,
+              then Unlock. Each answer opens the next, tougher clue. Cryptic
+              gives more context; Expert uses more indirect wording.
+              Easy / Medium / Hard give 5 / 4 / 3 minutes.
             </li>
             <li>
-              Correct answers add 20 seconds and 100 main-room points. Wrong
+              Correct answers add 20 seconds. Main clues earn 100 points, then
+              25 more per clue up to 450. Recovery riddles earn 50 points per
+              detention level. Your treasure score rises in 3D and fades; tap
+              Treasure score to reveal the total again. Wrong
               answers cost 5 / 10 / 15 seconds. Hints cost 10 / 15 / 20 seconds.
               Clear a room for one point per remaining second.
             </li>

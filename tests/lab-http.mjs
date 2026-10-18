@@ -34,8 +34,8 @@ await post(
   {
     op: "answer",
     ...h.session,
-    puzzleId: "j0a",
-    answer: "26",
+    puzzleId: "h0a",
+    answer: "key",
     phaseKey: `${ready.game.run}:loading:0:0`,
   },
   400,
@@ -50,18 +50,18 @@ const key = `${opened.game.run}:main:0:0`;
 const found = await post({
   op: "claim",
   ...h.session,
-  puzzleId: "j0a",
+  puzzleId: "h0a",
   phaseKey: key,
 });
-assert.deepEqual(found.game.discovered, ["j0a"]);
+assert.deepEqual(found.game.discovered, ["h0a"]);
 const again = await post({ op: "state", ...h.session });
-assert.deepEqual(again.game.discovered, ["j0a"]);
+assert.deepEqual(again.game.discovered, ["h0a"]);
 assert.equal(again.game.score, 0);
 const solved = await post({
   op: "answer",
   ...h.session,
-  puzzleId: "j0a",
-  answer: "26",
+  puzzleId: "h0a",
+  answer: "key",
   phaseKey: key,
 });
 assert.equal(solved.game.score, 100);

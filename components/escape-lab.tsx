@@ -2,12 +2,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Search, ScanLine, Check, LockKeyhole, DoorClosed } from "lucide-react";
 import type { PuzzleView } from "@/lib/game-types";
+import { ROOM_SCENES, roomScene } from "@/lib/room-scenes";
 
-const objects = [
-  { name: "Dusty notebook", note: "Inspect the forgotten desk", x: 16, y: 56 },
-  { name: "Chemical bottles", note: "Inspect the workbench", x: 89, y: 51 },
-  { name: "Broken terminal", note: "Inspect the old computer", x: 76, y: 38 },
-];
 export function EscapeLab({
   puzzles,
   discovered,
@@ -15,6 +11,7 @@ export function EscapeLab({
   openingLock,
   selected,
   detention,
+  punishment,
   roomIndex,
   disabled,
   choose,
@@ -25,15 +22,30 @@ export function EscapeLab({
   openingLock: string;
   selected: string;
   detention: boolean;
+  punishment: number;
   roomIndex: number;
   disabled: boolean;
   choose: (id: string) => void;
 }) {
+  const scene = roomScene(roomIndex, detention ? punishment : 0);
+  const objects = scene.objects;
   const [highlight, setHighlight] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     heading.current?.focus({ preventScroll: true });
-  }, [roomIndex, detention]);
+    const next = detention
+      ? ROOM_SCENES[roomIndex]
+      : ROOM_SCENES[roomIndex + 1];
+    if (next) {
+      const image = new Image();
+      image.src = next.image;
+    }
+    if (!detention && punishment < 3) {
+      const image = new Image();
+      image.src = roomScene(roomIndex, punishment + 1).image;
+    }
+  }, [scene.id, detention, punishment, roomIndex]);
   const found = puzzles.filter(
     (p) => discovered.includes(p.id) || p.solved,
   ).length;
@@ -41,6 +53,7 @@ export function EscapeLab({
     <section
       className={`escape-lab ${detention ? "lab-detention" : ""}`}
       aria-labelledby="lab-heading"
+      data-room={scene.id}
     >
       <div className="lab-heading">
         <div>
@@ -48,7 +61,7 @@ export function EscapeLab({
             {detention ? "DETENTION WING" : "SEARCH THE ROOM"}
           </span>
           <h3 id="lab-heading" tabIndex={-1} ref={heading}>
-            Abandoned science laboratory
+            {scene.name}
           </h3>
         </div>
         <button
@@ -61,17 +74,27 @@ export function EscapeLab({
         </button>
       </div>
       <p className="lab-instructions">
-        Tap suspicious objects to uncover hidden math clues. Open every lock to
-        escape this section.
+        {scene.atmosphere} Follow the trail: solve each riddle to reveal the next object. The later clues are tougher and worth more.
       </p>
-      <div className={`lab-scene ${highlight ? "highlight-objects" : ""}`}>
+      <div
+        key={scene.id}
+        className={`lab-scene room-arrival ${highlight ? "highlight-objects" : ""}`}
+      >
         <img
-          src="/lab/abandoned-laboratory.webp"
+          src={scene.image}
+          hidden={imageFailed}
+          onError={() => setImageFailed(true)}
           width="1672"
           height="941"
-          alt="An abandoned laboratory: a notebook on the desk at left, reagent bottles on the right workbench, and a broken computer beside the bolted exit."
+          alt={scene.alt}
         />
         <div className="lab-vignette" aria-hidden="true" />
+        {imageFailed && (
+          <p className="room-art-error" role="status">
+            The room artwork couldn’t load. All clues are still available in the
+            labelled controls below.
+          </p>
+        )}
         <span className="lab-location micro">
           {detention
             ? "RESTRICTED AREA"
@@ -80,7 +103,7 @@ export function EscapeLab({
         </span>
         <div
           className="lab-exit"
-          style={{ left: "56%", top: "29%" }}
+          style={{ left: `${scene.exit.x}%`, top: `${scene.exit.y}%` }}
           aria-hidden="true"
         >
           <DoorClosed size={18} />
@@ -95,9 +118,9 @@ export function EscapeLab({
             <button
               key={p.id}
               id={`lab-object-${p.id}`}
-              className={`lab-hotspot ${known ? "discovered" : ""} ${p.solved ? "solved" : ""} ${openingLock === p.id ? "lock-opening" : ""} ${selected === p.id ? "selected" : ""}`}
+              className={`lab-hotspot ${object.y > 60 ? "label-above" : ""} ${known ? "discovered" : ""} ${p.solved ? "solved" : ""} ${openingLock === p.id ? "lock-opening" : ""} ${selected === p.id ? "selected" : ""}`}
               style={{ left: `${object.x}%`, top: `${object.y}%` }}
-              aria-label={`${p.solved ? "Review" : "Search"} ${object.name.toLowerCase()}, clue ${i + 1}${p.locked ? ", solve both fragments first" : ""}`}
+              aria-label={`${p.solved ? "Review" : "Search"} ${object.name.toLowerCase()}, clue ${i + 1}${p.locked ? ", solve the previous clue first" : ""}`}
               aria-pressed={selected === p.id}
               disabled={disabled || p.locked}
               onClick={() => choose(p.id)}
@@ -117,10 +140,10 @@ export function EscapeLab({
             </button>
           );
         })}
-        <div className="lab-discoveries">
-          <Search size={15} aria-hidden="true" />
-          {found}/{puzzles.length} clues discovered
-        </div>
+      </div>
+      <div className="lab-discoveries">
+        <Search size={15} aria-hidden="true" />
+        {found}/{puzzles.length} clues discovered
       </div>
       <details className="lab-object-list">
         <summary>Search objects with labelled controls</summary>
@@ -145,7 +168,7 @@ export function EscapeLab({
                     : p.solved
                       ? "Lock opened · review clue"
                       : p.locked
-                        ? "Solve both fragments first"
+                        ? "Solve the previous clue first"
                         : discovered.includes(p.id)
                           ? p.title
                           : objects[i % objects.length].note}
@@ -157,7 +180,8 @@ export function EscapeLab({
       </details>
       {!selected && (
         <p className="lab-search-prompt" role="status">
-          There’s a clue hidden in plain sight. Search an object to begin.
+          There’s a clue hidden in plain sight. Tap an object or use the
+          labelled controls to begin.
         </p>
       )}
     </section>
