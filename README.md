@@ -72,7 +72,7 @@ Requires **Node.js 24.x** and npm. The deployment target is now native Next.js, 
 ```sh
 cd "/Users/sujaygopal/Desktop/MyProjects/The-Final-Exam---A-Multiplayer-Game"
 nvm use 24
-git switch codex/treasure-hunt
+git switch codex/touch-release
 npm run install:ci
 npm run dev
 ```
@@ -153,4 +153,4 @@ The fixed treasure trail contains fifteen main riddles with two wording levels a
 
 **Recruiter explanation:** Friends join from their phones and uncover a professor’s story by solving hidden riddles under time pressure.
 
-Current feature branch: `codex/treasure-hunt`, based on `codex/room-worlds-aptitude`. This work does not publish or merge production. [Three future proposals](docs/next-additions.md) remain suggestions rather than implemented or measured retention improvements.
+Release branch: `codex/touch-release`, based on `codex/treasure-hunt` and `codex/room-worlds-aptitude`. Version 2.0.0 adds native radio selection cards, full-card touch toggles, an explicit ready state, and `/api/version` deployment identification. [Three future proposals](docs/next-additions.md) remain suggestions rather than implemented or measured retention improvements.

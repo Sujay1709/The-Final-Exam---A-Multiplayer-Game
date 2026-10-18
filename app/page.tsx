@@ -25,6 +25,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { useGameTools } from "@/lib/webmcp";
 import { usePreferences } from "@/lib/use-preferences";
 import { ProfileEditor, AliasButton } from "@/components/profile-editor";
+import { TouchToggle } from "@/components/touch-controls";
 import { RoomSettings } from "@/components/room-settings";
 import { NEW_ROOM_SETTINGS, type GameSettings } from "@/lib/game-settings";
 import type { Difficulty } from "@/lib/game-types";
@@ -308,22 +309,10 @@ export default function Home() {
             <DialogDescription>
               Saved on this browser. Character changes apply only in the lobby.
             </DialogDescription>
-            <label className="preference-toggle">
-              <input
-                type="checkbox"
-                checked={preferences.sound}
-                onChange={(e) => update({ sound: e.target.checked })}
-              />
-              Game sounds
-            </label>
-            <label className="preference-toggle">
-              <input
-                type="checkbox"
-                checked={preferences.reducedMotion}
-                onChange={(e) => update({ reducedMotion: e.target.checked })}
-              />
-              Reduce motion
-            </label>
+            <TouchToggle title="Game sounds" detail="Hear lock openings and warning cues."
+              checked={preferences.sound} onChange={sound => update({sound})}/>
+            <TouchToggle title="Reduce motion" detail="Keep feedback calm without 3D movement."
+              checked={preferences.reducedMotion} onChange={reducedMotion => update({reducedMotion})}/>
             {(!api.game || api.game.phase === "lobby") && (
               <>
                 <label className="settings-field">

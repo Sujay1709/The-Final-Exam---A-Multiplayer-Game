@@ -366,16 +366,18 @@ export function Game({
               </div>
               <div className="lobby-actions">
                 <button
-                  className={me?.ready ? "secondary-button" : "primary-button"}
+                  className={`ready-control ${me?.ready ? "is-ready" : ""}`}
+                  aria-pressed={!!me?.ready}
+                  aria-busy={busy === "ready"}
                   disabled={!!busy || !connected}
                   onClick={() => void action("ready", { ready: !me?.ready })}
                 >
                   {busy === "ready" ? (
                     <Loader2 size={17} className="loading-spin" />
                   ) : (
-                    <Check size={17} />
-                  )}{" "}
-                  {me?.ready ? "Ready · click to undo" : "I'm ready"}
+                    <span className="ready-check"><Check size={24} aria-hidden="true" /></span>
+                  )}
+                  <span><strong>{me?.ready ? "You’re ready" : "I'm ready"}</strong><small>{me?.ready ? "Tap to undo" : "Tap to join the countdown"}</small></span>
                 </button>
                 <span className="lobby-auto-start">
                   <Clock3 size={18} aria-hidden="true" />
