@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { treasureRooms } from "../lib/treasure-hunt.ts";
 import { waitForLab } from "./http-helpers.mjs";
-const origin=process.env.GAME_TEST_URL??"http://localhost:5174";
+const origin=process.env.GAME_TEST_URL??"http://localhost:5173";
 async function post(op,args={},session,status=200){
   const res=await fetch(origin+"/api/game",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({op,id:crypto.randomUUID(),...session,...args})});
   const data=await res.json();assert.equal(res.status,status,JSON.stringify(data));return data;

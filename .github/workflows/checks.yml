@@ -39,6 +39,8 @@ jobs:
       - name: Wait for preview
         run: node scripts/wait-for-game.mjs
       - name: Test HTTP multiplayer and profile contracts
+        env:
+          GAME_TEST_URL: http://127.0.0.1:5173
         run: |
           node tests/integration.mjs
           node tests/profiles-http.mjs
